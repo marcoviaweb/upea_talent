@@ -32,6 +32,10 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.academics.apps.AcademicsConfig",
     "apps.profiles.apps.ProfilesConfig",
+    "apps.activities.apps.ActivitiesConfig",
+    "apps.opportunities.apps.OpportunitiesConfig",
+    "apps.transfers.apps.TransfersConfig",
+    "apps.evaluations.apps.EvaluationsConfig",
     "apps.audit.apps.AuditConfig",
 ]
 

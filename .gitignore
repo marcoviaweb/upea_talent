@@ -14,6 +14,7 @@ staticfiles/
 *.log
 db.sqlite3
 media/
+private_uploads/
 staticfiles/
 
 # Environment secrets

@@ -89,7 +89,7 @@ Primero crea una cuenta técnica para el panel. Django te pedirá nombre de usua
 .\.venv\Scripts\python.exe manage.py createsuperuser
 ```
 
-Después de crearla, vuelve a ejecutar `manage.py seed_demo` para generar las cuentas sintéticas y sus trayectorias. Para probar el portal, asigna una clave local a `demo.estudiante02` y `demo.docente01` con `manage.py changepassword <usuario>`.
+Después de crearla, vuelve a ejecutar `manage.py seed_demo` para generar las cuentas sintéticas, trayectorias, oportunidades y ejemplos. Para probar E07, asigna una clave local a `demo.estudiante01` y `demo.coordinador01`; para E08, también a `demo.estudiante02` y `demo.estudiante03`, con `manage.py changepassword <usuario>`.
 
 Inicia el frontend y el backend en **dos ventanas de PowerShell**. En la primera ejecuta Django:
 
@@ -116,6 +116,8 @@ En el navegador abre:
 
 - `http://127.0.0.1:8000/admin/` — inicia sesión con la cuenta técnica que acabas de crear. El panel restringido permite configurar catálogos; matrículas y perfiles privados no se exponen allí.
 - `http://127.0.0.1:5173/acceso/` — portal React en desarrollo; en compilación se monta bajo las rutas de Django.
+- `/trayectoria/transferencias/` — reconocimientos entre estudiantes; también se abre desde **Evidencias y SPD → Transferencias**.
+- `/trayectoria/evaluaciones/` — encuestas habilitadas, resultados agregados y gestión de campañas E09.
 - `http://127.0.0.1:8000/health/live` — confirma que Django responde.
 - `http://127.0.0.1:8000/health/ready` — confirma que Django puede consultar PostgreSQL.
 - `prototipo/e02/index.html` — maqueta visual local de E02, con datos ficticios. Sus botones simulan interacciones, no guardan nada ni aplican permisos reales.
@@ -144,9 +146,9 @@ Con PostgreSQL iniciado, ejecuta desde la raíz del proyecto:
 .\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
 ```
 
-Las pruebas comprueban salud y conexión, aislamiento E04, login/CSRF de API, privacidad por matrícula, declaraciones y revisiones auditadas, notas verificadas y correcciones enlazadas. `npm run typecheck` y `npm run build` comprueban el frontend. Consulta [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md) para recorrer el portal.
+Las pruebas cubren los módulos entregados, incluida elegibilidad, postulaciones, límites de E08, privacidad, habilitación, umbral de cinco y agregación anónima de E09. `npm run typecheck` y `npm run build` comprueban el frontend. Consulta [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md) para los recorridos.
 
-El comando `seed_demo` carga datos ficticios de Ingeniería de Sistemas. Es idempotente, no establece contraseñas y, si ya existe un superusuario, añade tres estudiantes, un docente y la trayectoria para probar E05. Detalles: [E04_IDENTIDAD_ACADEMIA.md](E04_IDENTIDAD_ACADEMIA.md) y [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md).
+El comando `seed_demo` carga datos ficticios de Ingeniería de Sistemas. Es idempotente, no establece contraseñas y, si ya existe un superusuario, añade cinco estudiantes, un docente, coordinación, cursos, trayectoria, reglamento SPD, una beca de investigación, ejemplos E08 y una campaña abierta E09 para cinco respondientes. Guías de recorrido: [E04_IDENTIDAD_ACADEMIA.md](E04_IDENTIDAD_ACADEMIA.md), [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md).
 
 ## Problemas habituales
 
@@ -154,7 +156,7 @@ El comando `seed_demo` carga datos ficticios de Ingeniería de Sistemas. Es idem
 - **No puede enlazar el puerto 55432:** detén otro proceso que lo use o cambia `POSTGRES_PORT` por `55433` en `.env`; luego ejecuta `docker compose up -d --force-recreate db`.
 - **Django informa que PostgreSQL no acepta la conexión:** revisa `docker compose ps` y que `POSTGRES_HOST=127.0.0.1`, `POSTGRES_PORT=55432`, base, usuario y contraseña correspondan al `.env` usado al crear la base.
 - **El panel pide usuario y contraseña:** créalos con `manage.py createsuperuser`; no hay credenciales de demostración precargadas.
-- **No puedes entrar a `/acceso/`:** no hay contraseñas predeterminadas. Ejecuta `seed_demo` después de crear el superusuario y establece una clave local con `manage.py changepassword demo.estudiante02` o `demo.docente01`.
+- **No puedes entrar a `/acceso/`:** no hay contraseñas predeterminadas. Ejecuta `seed_demo` después de crear el superusuario y asigna claves a las cuentas necesarias con `manage.py changepassword demo.estudiante01`, `demo.estudiante02`, `demo.estudiante03`, `demo.estudiante04`, `demo.estudiante05`, `demo.docente01` y `demo.coordinador01`.
 
 ## Estructura técnica
 
@@ -164,6 +166,7 @@ apps/core/                      Endpoints de salud y pruebas
 apps/accounts/                  Usuario, asignaciones de rol y permisos por ámbito
 apps/academics/                 Institución, carreras, periodos, grupos, matrículas y notas
 apps/profiles/                  Dominio de trayectoria, API y portal Django/React
+apps/activities/                Evidencias privadas, revisión, reglamentos SPD y libro de puntos
 apps/audit/                     Bitácora básica append-only
 design-system/upea-talent/      Tokens visuales y especificación de pantalla
 apps/<dominio>/                 Paquetes para los límites definidos en E02
@@ -172,6 +175,7 @@ compose.yaml                    PostgreSQL 17 en loopback
 requirements.txt                Dependencias directas
 package.json                    Herramientas y bibliotecas React/TypeScript/Vite
 frontend/src/                   Interfaz React del portal
+frontend/src/features/e06/      Experiencia de presentación, revisión y consulta SPD
 vite.config.ts                  Desarrollo local y compilación de recursos frontend
 requirements-lock.txt           Versiones exactas para instalación repetible
 prototipo/e02/                  Maqueta visual sin conexión al backend

@@ -1,0 +1,20 @@
+.e06-page-hero .hero-art {
+  width: 260px;
+}
+
+.e06-page-hero .hero-art-core {
+  color: #b9f4e6;
+}
+
+@media (max-width: 1024px) {
+  .e06-page-hero .hero-art {
+    width: 220px;
+  }
+}
+
+@media (max-width: 767px) {
+  .e06-page-hero .hero-art {
+    width: 190px;
+  }
+}
+

@@ -23,7 +23,7 @@ export type Profile = {
   projects: DevelopmentRecord[]; skills: DevelopmentRecord[];
   counts: { validatedProjects: number; validatedSkills: number };
 };
-export type HomeData = { user: User; enrollments: Enrollment[]; groups: Array<{
+export type HomeData = { user: User; enrollments: Enrollment[]; canRegisterVerifiedActivity?: boolean; groups: Array<{
   id: string; course: { code: string; name: string; career: string }; period: string; group: string; studentCount: number;
 }> };
 
@@ -40,7 +40,7 @@ async function readCsrf(): Promise<string> {
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const method = (options.method ?? "GET").toUpperCase();
   const headers = new Headers(options.headers);
-  if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) headers.set("X-CSRFToken", await readCsrf());
   const response = await fetch(path, { ...options, method, headers, credentials: "same-origin" });
   if (response.status === 204) return undefined as T;

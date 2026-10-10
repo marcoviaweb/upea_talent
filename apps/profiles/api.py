@@ -13,7 +13,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.accounts.models import RoleAssignment
-from apps.accounts.permissions import visible_course_enrollments
+from apps.accounts.permissions import current_role_assignments, visible_course_enrollments
 from apps.academics.models import CourseEnrollment, CourseOffering, GradeRecord
 
 from .forms import StudentProjectForm, StudentSkillForm
@@ -125,7 +125,10 @@ def api_logout(request):
 def api_home(request):
     enrollments = list(student_enrollments(request.user))
     offerings = assigned_teacher_offerings(request.user)
-    if not enrollments and not offerings.exists():
+    can_manage_career = current_role_assignments(request.user).filter(
+        role__in=(RoleAssignment.Role.COORDINATOR, RoleAssignment.Role.CAREER_ADMIN, RoleAssignment.Role.INSTITUTION_ADMIN)
+    ).exists() or request.user.is_superuser
+    if not enrollments and not offerings.exists() and not can_manage_career:
         raise PermissionDenied("Tu cuenta no tiene una matrícula estudiantil ni grupos docentes vigentes.")
     groups = [{
         "id": str(offering.pk), "course": {"code": offering.course.code, "name": offering.course.name,
@@ -135,7 +138,8 @@ def api_home(request):
     } for offering in offerings]
     return Response({"user": _user_payload(request.user),
                      "enrollments": [_enrollment_payload(enrollment) for enrollment in enrollments],
-                     "groups": groups})
+                     "groups": groups,
+                     "canRegisterVerifiedActivity": can_manage_career})
 
 
 @api_view(["GET"])
