@@ -1,0 +1,11 @@
+{% extends "profiles/base.html" %}
+{% block title %}{{ offering.course.code }} · Grupo {{ offering.group_code }}{% endblock %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Ruta de navegación"><a href="{% url 'profiles:trajectory-home' %}">Mi espacio</a><span aria-hidden="true">/</span><span>Mis grupos</span></nav>
+<section class="page-heading"><div><span class="eyebrow">{{ offering.course.career.name }} · {{ offering.period.name }}</span><h1>{{ offering.course.name }}</h1><p class="intro">Grupo {{ offering.group_code }} · {{ roster|length }} estudiante{{ roster|length|pluralize:"s" }}</p></div></section>
+<section class="section-block" aria-labelledby="roster-title"><div class="section-heading"><div><h2 id="roster-title">Lista del grupo</h2><p>Los datos se muestran por tu asignación docente vigente.</p></div></div>
+{% if roster %}<div class="table-wrap"><table><thead><tr><th scope="col">Estudiante</th><th scope="col">N.º de registro</th><th scope="col">Estado de matrícula</th><th scope="col"><span class="visually-hidden">Acción</span></th></tr></thead><tbody>
+{% for row in roster %}<tr><td data-label="Estudiante"><strong>{{ row.enrollment.student.user.get_full_name|default:row.enrollment.student.user.username }}</strong></td><td data-label="N.º de registro">{{ row.enrollment.student.student_number }}</td><td data-label="Matrícula"><span class="state state-{{ row.enrollment.status }}">{{ row.enrollment.get_status_display }}</span></td><td data-label="Acción"><a class="text-link" href="{% url 'profiles:enrollment-profile' row.enrollment_id %}">Consultar trayectoria</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">0</span><h3>Aún no hay estudiantes en este grupo</h3><p>Cuando se registren matrículas y asignaciones, aparecerán aquí.</p></div>{% endif %}
+</section>
+{% endblock %}

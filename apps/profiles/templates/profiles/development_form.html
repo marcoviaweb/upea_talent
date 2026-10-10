@@ -1,0 +1,12 @@
+{% extends "profiles/base.html" %}
+{% block title %}{% if record_type == 'project' %}Proyecto{% else %}Habilidad{% endif %} · Mi trayectoria{% endblock %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Ruta de navegación"><a href="{% url 'profiles:trajectory-home' %}">Mi espacio</a><span aria-hidden="true">/</span><a href="{% url 'profiles:enrollment-profile' enrollment.id %}">Mi trayectoria</a><span aria-hidden="true">/</span><span>{% if record_type == 'project' %}Proyecto{% else %}Habilidad{% endif %}</span></nav>
+<section class="form-page"><span class="eyebrow">{% if record_type == 'project' %}PROYECTOS{% else %}HABILIDADES{% endif %} · {{ enrollment.career.code }}</span><h1>{% if editing %}Editar declaración{% else %}Añadir {% if record_type == 'project' %}proyecto{% else %}habilidad{% endif %}{% endif %}</h1><p class="intro">Los datos se guardan como declaración personal. Puedes enviar el registro a una persona revisora asignada para validarlo.</p>
+  <form method="post" class="form-stack card-form" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div id="form-error-summary" class="form-error" role="alert" tabindex="-1">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}</label>{{ field }}{% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}{% if field.errors %}<div class="field-error" id="{{ field.id_for_label }}-error" role="alert">{{ field.errors|join:", " }}</div>{% endif %}</div>{% endfor %}
+    <div class="form-actions"><a class="button button-quiet" href="{% url 'profiles:enrollment-profile' enrollment.id %}">Cancelar</a><button class="button button-secondary" type="submit" name="intent" value="draft">Guardar borrador</button><button class="button button-primary" type="submit" name="intent" value="submit">Enviar a revisión</button></div>
+  </form>
+</section>
+{% endblock %}

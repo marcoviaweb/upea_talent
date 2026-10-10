@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f8">
+  <meta name="description" content="Prototipo de diseño de UPEA Talent+ con datos ficticios para revisión de E02.">
+  <title>UPEA Talent+ · Prototipo de diseño E02</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <div class="preview-frame">
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="UPEA Talent+, ir al inicio">
+        <span class="brand-mark" aria-hidden="true">UT<span>+</span></span>
+        <span class="brand-copy"><strong>UPEA Talent<span>+</span></strong><small>Trayectoria universitaria</small></span>
+      </a>
+      <div class="topbar-context">
+        <span class="context-label">Carrera</span>
+        <span class="context-value">Ingeniería de Sistemas</span>
+        <span class="context-divider" aria-hidden="true"></span>
+        <span class="context-label">Periodo</span>
+        <span class="context-value">II · 2026</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button notice-button" type="button" aria-label="Notificaciones, 2 sin leer">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg>
+          <span class="notice-dot" aria-hidden="true"></span>
+        </button>
+        <button class="user-menu" type="button" aria-label="Cuenta de Daniela Quispe">
+          <span class="avatar" aria-hidden="true">DQ</span>
+          <span class="user-copy"><strong>Daniela Quispe</strong><small>Estudiante</small></span>
+          <svg class="chevron" aria-hidden="true" viewBox="0 0 16 16"><path d="m4 6 4 4 4-4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegación principal">
+        <div class="mobile-context">
+          <span>Carrera activa</span>
+          <strong>Ingeniería de Sistemas</strong>
+        </div>
+        <nav class="primary-nav" aria-label="Principal">
+          <p class="nav-caption" data-nav-for="estudiante">MI ESPACIO</p>
+          <a class="nav-item is-active" href="#inicio" aria-current="page">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg><span>Inicio</span>
+          </a>
+          <a class="nav-item" href="#trayectoria">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 20V8m7 12V4m7 16v-9M3 20h18"/></svg><span>Mi trayectoria</span>
+          </a>
+          <a class="nav-item" href="#evidencias">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 0v5h5m-9 5h6m-6 4h6"/></svg><span>Actividades y evidencias</span><span class="nav-count">2</span>
+          </a>
+          <a class="nav-item" href="#oportunidades">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 17h14M6 7l-3 6h6Zm12 0-3 6h6ZM5 17l-3 4h6Zm14 0-3 4h6Z"/></svg><span>Oportunidades</span>
+          </a>
+          <a class="nav-item" href="#evaluaciones">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 9h8m-8 4h8m-8 4h5"/></svg><span>Evaluaciones</span>
+          </a>
+          <a class="nav-item" href="#apoyo">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s-8-4.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.5-8 11-8 11Zm-3-9h6m-3-3v6"/></svg><span>Acompañamiento</span>
+          </a>
+          <p class="nav-caption nav-caption-space" data-nav-for="estudiante">TU CUENTA</p>
+          <a class="nav-item" href="#movimientos">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10M7 4 4 7l3 3m10 4 3 3-3 3"/></svg><span>Mis puntos</span>
+          </a>
+          <p class="nav-caption nav-caption-space" data-nav-for="docente" hidden>DOCENCIA</p>
+          <a class="nav-item" href="#docente" data-nav-for="docente" hidden><span>Inicio docente</span></a>
+          <a class="nav-item" href="#docente" data-nav-for="docente" hidden><span>Revisar evidencias</span><span class="nav-count">4</span></a>
+          <p class="nav-caption nav-caption-space" data-nav-for="coordinacion" hidden>COORDINACIÓN</p>
+          <a class="nav-item" href="#coordinacion" data-nav-for="coordinacion" hidden><span>Panel de carrera</span></a>
+          <a class="nav-item" href="#coordinacion" data-nav-for="coordinacion" hidden><span>Evaluaciones agregadas</span></a>
+          <p class="nav-caption nav-caption-space" data-nav-for="administracion" hidden>ADMINISTRACIÓN</p>
+          <a class="nav-item" href="#administracion" data-nav-for="administracion" hidden><span>Configuración académica</span></a>
+          <a class="nav-item" href="#administracion" data-nav-for="administracion" hidden><span>Reglas y bitácora</span></a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="help-card"><span class="help-icon" aria-hidden="true">?</span><div><strong>¿Necesitas ayuda?</strong><small>Consulta la guía de uso</small></div><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></div>
+          <span class="version-label">UPEA Talent+ · Diseño E02</span>
+        </div>
+      </aside>
+
+      <main id="main-content" class="main-content" tabindex="-1">
+        <div class="prototype-banner" role="note">
+          <span class="prototype-indicator" aria-hidden="true"></span>
+          <p><strong>Prototipo visual</strong><span>· Datos ficticios de Ingeniería de Sistemas</span></p>
+          <label class="role-switch">Previsualizar navegación
+            <select id="role-select" name="demo-role" aria-label="Cambiar vista de demostración">
+              <option value="estudiante">Estudiante</option>
+              <option value="docente">Docente</option>
+              <option value="coordinacion">Coordinación</option>
+              <option value="administracion">Administración</option>
+            </select>
+          </label>
+          <span id="role-preview-status" class="visually-hidden" aria-live="polite">Vista de navegación de estudiante; la cuenta y los datos son ficticios.</span>
+        </div>
+
+        <section class="page-view" id="view-inicio" aria-labelledby="welcome-title">
+          <div class="page-heading">
+            <div><p class="eyebrow">VIERNES, 9 DE OCTUBRE DE 2026</p><h1 id="welcome-title">Buenos días, Daniela</h1><p class="heading-subtitle">Tu aprendizaje deja huella. Aquí puedes ver cómo avanza tu trayectoria.</p></div>
+            <a class="button button-primary" href="#trayectoria"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 4v12m-6-6h12"/></svg>Ver mi trayectoria</a>
+          </div>
+
+          <div class="metric-grid" aria-label="Resumen de tu trayectoria">
+            <article class="metric-card metric-points">
+              <div class="metric-top"><span class="metric-label">Mérito propio</span><span class="metric-icon teal-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/></svg></span></div>
+              <div class="metric-value">90 <span>puntos</span></div>
+              <div class="metric-foot"><span class="level-mark"></span><span>Nivel <strong>Explorador</strong></span><span class="metric-detail">10 para Participante</span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span class="metric-label">Promedio académico</span><span class="metric-icon blue-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9m5 10V5m5 14v-7m5 7V3M2 21h20"/></svg></span></div>
+              <div class="metric-value">82.4 <span>/ 100</span></div>
+              <div class="metric-foot"><span class="trend-up">↑ 3.2</span><span>respecto al periodo anterior</span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span class="metric-label">Actividades validadas</span><span class="metric-icon amber-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span></div>
+              <div class="metric-value">8 <span>actividades</span></div>
+              <div class="metric-foot"><span>En tu trayectoria</span><a href="#evidencias">Ver historial</a></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span class="metric-label">Oportunidades compatibles</span><span class="metric-icon plum-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 17h14m-7-10-3 6h6Zm0 4-3 6h6Z"/></svg></span></div>
+              <div class="metric-value">3 <span>disponibles</span></div>
+              <div class="metric-foot"><span>Según tus datos actuales</span><a href="#oportunidades">Explorar</a></div>
+            </article>
+          </div>
+
+          <div class="content-grid">
+            <section class="panel progress-panel" aria-labelledby="progress-title">
+              <div class="panel-header"><div><h2 id="progress-title">Tu trayectoria</h2><p>Progreso personal por periodo académico</p></div><a class="quiet-link" href="#trayectoria">Ver detalle <span aria-hidden="true">→</span></a></div>
+              <div class="chart-legend"><span><i class="legend-dot legend-gpa"></i>Promedio</span><span><i class="legend-dot legend-points"></i>Actividades validadas</span><span class="chart-unit">Periodo II · 2026</span></div>
+              <div class="chart-wrap" role="img" aria-label="Resumen de cuatro periodos: promedio 76, 79, 81 y 82.4. Actividades validadas: 3, 5, 7 y 8, desde periodo uno de 2025 hasta periodo dos de 2026.">
+                <div class="chart-y-labels" aria-hidden="true"><span>100</span><span>75</span><span>50</span><span>25</span></div>
+                <div class="chart-plot" aria-hidden="true">
+                  <div class="chart-gridline grid-1"></div><div class="chart-gridline grid-2"></div><div class="chart-gridline grid-3"></div><div class="chart-gridline grid-4"></div>
+                  <svg class="chart-lines" viewBox="0 0 620 188" preserveAspectRatio="none"><polyline class="gpa-line" points="44,80 222,68 400,51 578,37"/><circle class="point-dot" cx="44" cy="80" r="4"/><circle class="point-dot" cx="222" cy="68" r="4"/><circle class="point-dot" cx="400" cy="51" r="4"/><circle class="point-dot" cx="578" cy="37" r="4"/><polyline class="activities-line" points="44,148 222,133 400,108 578,87"/></svg>
+                  <div class="chart-x-labels"><span>I · 2025</span><span>II · 2025</span><span>I · 2026</span><span>II · 2026</span></div>
+                </div>
+              </div>
+              <p class="chart-note">Los datos se comparan contigo a través del tiempo; no representan una clasificación entre estudiantes.</p>
+              <details class="table-disclosure"><summary>Ver datos de la gráfica como tabla</summary><div class="table-scroll"><table><caption>Progreso por periodo</caption><thead><tr><th scope="col">Periodo</th><th scope="col">Promedio</th><th scope="col">Actividades validadas</th></tr></thead><tbody><tr><th scope="row">I · 2025</th><td>76</td><td>3</td></tr><tr><th scope="row">II · 2025</th><td>79</td><td>5</td></tr><tr><th scope="row">I · 2026</th><td>81</td><td>7</td></tr><tr><th scope="row">II · 2026</th><td>82.4</td><td>8</td></tr></tbody></table></div></details>
+            </section>
+
+            <section class="panel next-panel" aria-labelledby="next-title">
+              <div class="panel-header"><div><h2 id="next-title">Para continuar</h2><p>Acciones que puedes atender</p></div><span class="small-count">2</span></div>
+              <a class="next-item" href="#evidencias"><span class="next-icon next-review" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h4"/></svg></span><span class="next-copy"><strong>Actividad en revisión</strong><small>Curso de Bases de Datos · Enviada ayer</small></span><svg class="next-arrow" aria-hidden="true" viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></a>
+              <a class="next-item" href="#oportunidades"><span class="next-icon next-match" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 17h14m-7-10-3 6h6Zm0 4-3 6h6Z"/></svg></span><span class="next-copy"><strong>Oportunidad recomendada</strong><small>Beca de Investigación · Cierra el 24 oct.</small></span><svg class="next-arrow" aria-hidden="true" viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></a>
+              <div class="next-divider"></div>
+              <div class="next-footer"><span class="next-footer-mark" aria-hidden="true">i</span><p>Las recomendaciones se basan en reglas visibles y datos verificados de tu perfil.</p></div>
+            </section>
+          </div>
+
+          <section class="panel opportunities-panel" aria-labelledby="opportunities-title">
+            <div class="panel-header"><div><h2 id="opportunities-title">Oportunidades para ti</h2><p>Condiciones publicadas por tu carrera</p></div><a class="quiet-link" href="#oportunidades">Ver todas <span aria-hidden="true">→</span></a></div>
+            <div class="opportunity-grid">
+              <article class="opportunity-card"><div class="opp-top"><span class="opportunity-type type-scholarship">BECAS</span><span class="opp-deadline">Cierra el 24 oct.</span></div><h3>Beca de Investigación</h3><p>Participa en proyectos activos de investigación de la carrera.</p><div class="eligibility"><span class="eligibility-icon" aria-hidden="true">✓</span><span>Compatible con tu perfil</span><a href="#oportunidades">Ver requisitos</a></div></article>
+              <article class="opportunity-card"><div class="opp-top"><span class="opportunity-type type-internship">PASANTÍA</span><span class="opp-deadline">Cierra el 31 oct.</span></div><h3>Laboratorio de Software</h3><p>Experiencia práctica en proyectos de desarrollo universitario.</p><div class="eligibility eligibility-neutral"><span class="eligibility-icon" aria-hidden="true">i</span><span>Revisa las condiciones</span><a href="#oportunidades">Ver requisitos</a></div></article>
+              <article class="opportunity-card"><div class="opp-top"><span class="opportunity-type type-course">CURSO</span><span class="opp-deadline">Cierra el 4 nov.</span></div><h3>Introducción a la investigación</h3><p>Curso certificado para iniciar un proyecto académico.</p><div class="eligibility"><span class="eligibility-icon" aria-hidden="true">✓</span><span>Compatible con tu perfil</span><a href="#oportunidades">Ver requisitos</a></div></article>
+            </div>
+          </section>
+          <footer class="page-footer"><span>UPEA Talent+ · Prototipo de diseño</span><span>Datos ficticios · No usar para decisiones académicas</span></footer>
+        </section>
+
+        <section class="page-view secondary-view" id="view-trayectoria" aria-labelledby="trajectory-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">MI ESPACIO / TRAYECTORIA</p><h1 id="trajectory-title">Mi trayectoria</h1><p class="heading-subtitle">Una vista integral de lo que has aprendido y aportado.</p></div><button class="button button-outline" type="button">Descargar resumen</button></div>
+          <div class="profile-intro panel"><span class="profile-avatar" aria-hidden="true">DQ</span><div class="profile-intro-main"><h2>Daniela Quispe</h2><p>Ingeniería de Sistemas <span aria-hidden="true">·</span> 5.º semestre <span aria-hidden="true">·</span> II · 2026</p><div class="profile-tags"><span>Perfil de demostración</span><span>Datos ficticios</span></div></div><span class="level-badge">Nivel Explorador</span></div>
+          <div class="metric-grid trajectory-metrics"><article class="metric-card"><span class="metric-label">Promedio validado</span><div class="metric-value">82.4 <span>/ 100</span></div><div class="metric-foot">Fuente: registro académico ficticio</div></article><article class="metric-card"><span class="metric-label">Mérito propio</span><div class="metric-value">90 <span>puntos</span></div><div class="metric-foot">10 puntos para el siguiente nivel</div></article><article class="metric-card"><span class="metric-label">Proyectos</span><div class="metric-value">3 <span>registrados</span></div><div class="metric-foot">2 con participación validada</div></article><article class="metric-card"><span class="metric-label">Habilidades</span><div class="metric-value">5 <span>identificadas</span></div><div class="metric-foot">3 habilidades con evidencia</div></article></div>
+          <div class="content-grid"><section class="panel"><div class="panel-header"><div><h2>Proyectos y experiencia</h2><p>Actividades registradas en tu perfil</p></div><button class="button button-small button-outline" type="button">Agregar proyecto</button></div><div class="timeline-item"><span class="timeline-point" aria-hidden="true"></span><div><div class="timeline-title"><strong>Aplicación para gestión de inventario</strong><span class="state-pill state-validated">Validado</span></div><p>Proyecto académico · Desarrollo backend y diseño de base de datos</p><small>II · 2026 · Revisión docente</small></div></div><div class="timeline-item"><span class="timeline-point timeline-muted" aria-hidden="true"></span><div><div class="timeline-title"><strong>Seminario de sistemas distribuidos</strong><span class="state-pill state-pending">Pendiente</span></div><p>Participación académica · Evidencia en revisión</p><small>II · 2026 · Presentado el 8 de octubre</small></div></div></section><section class="panel skills-panel"><div class="panel-header"><div><h2>Habilidades</h2><p>Identificadas y sustentadas</p></div><a class="quiet-link" href="#evidencias">Ver evidencias</a></div><div class="skill-row"><div><strong>Python</strong><small>Validada por proyecto</small></div><span class="skill-level"><i style="width:78%"></i></span><span class="skill-state">Validada</span></div><div class="skill-row"><div><strong>SQL</strong><small>Curso certificado</small></div><span class="skill-level"><i style="width:72%"></i></span><span class="skill-state">Validada</span></div><div class="skill-row"><div><strong>Trabajo en equipo</strong><small>Autodeclarada</small></div><span class="skill-level"><i class="skill-pending" style="width:56%"></i></span><span class="skill-pending-label">Declarada</span></div><p class="skill-note">El nivel visual es informativo y no equivale a certificación profesional.</p></section></div>
+          <div class="page-footer"><span>UPEA Talent+ · Prototipo de diseño</span><span>Solo la información validada se usa en requisitos académicos</span></div>
+        </section>
+
+        <section class="page-view secondary-view" id="view-evidencias" aria-labelledby="evidence-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">MI ESPACIO / ACTIVIDADES</p><h1 id="evidence-title">Actividades y evidencias</h1><p class="heading-subtitle">Presenta tus avances y consulta el estado de cada revisión.</p></div><button class="button button-primary" type="button" id="new-evidence"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 4v12m-6-6h12"/></svg>Registrar actividad</button></div>
+          <div class="info-alert"><span class="alert-icon" aria-hidden="true">i</span><p>Cada actividad que otorga puntos necesita un criterio y una evidencia validada. <a href="#movimientos">Consulta el reglamento del SPD</a>.</p></div>
+          <section class="panel evidence-panel"><div class="panel-header"><div><h2>Mis actividades</h2><p>Revisiones de la carrera seleccionada</p></div><label class="filter-select">Estado<select id="evidence-filter" name="evidence-status"><option value="todas">Todos los estados</option><option value="review">En revisión</option><option value="approved">Aprobadas</option></select></label></div><div class="table-scroll"><table><caption class="visually-hidden">Actividades y evidencias del estudiante ficticio</caption><thead><tr><th scope="col">Actividad</th><th scope="col">Categoría</th><th scope="col">Presentada</th><th scope="col">Estado</th><th scope="col">Puntos</th><th scope="col"><span class="visually-hidden">Acción</span></th></tr></thead><tbody id="evidence-rows"><tr data-status="review"><th scope="row"><strong>Curso de Bases de Datos</strong><small>Certificado · 2 archivos</small></th><td>Curso certificado</td><td>8 oct. 2026</td><td><span class="state-pill state-review"><i aria-hidden="true"></i>En revisión</span></td><td>—</td><td><a class="row-action" href="#evidencias">Ver detalle</a></td></tr><tr data-status="approved"><th scope="row"><strong>Proyecto: gestor de inventario</strong><small>Proyecto académico · 1 archivo</small></th><td>Proyecto académico</td><td>25 sept. 2026</td><td><span class="state-pill state-validated"><i aria-hidden="true"></i>Aprobada</span></td><td>+20</td><td><a class="row-action" href="#evidencias">Ver detalle</a></td></tr><tr data-status="approved"><th scope="row"><strong>Seminario de sistemas distribuidos</strong><small>Constancia de participación · 1 archivo</small></th><td>Seminario</td><td>14 ago. 2026</td><td><span class="state-pill state-validated"><i aria-hidden="true"></i>Aprobada</span></td><td>+5</td><td><a class="row-action" href="#evidencias">Ver detalle</a></td></tr></tbody></table></div><p class="table-footnote">Puntos informativos de una demostración ficticia. La aprobación real exige un revisor autorizado.</p></section>
+          <div class="page-footer"><span>Los cambios de estado se guardan en el historial</span><span>Prototipo · Sin carga de archivos real</span></div>
+        </section>
+
+        <section class="page-view secondary-view" id="view-oportunidades" aria-labelledby="opportunity-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">DESARROLLO / OPORTUNIDADES</p><h1 id="opportunity-title">Oportunidades</h1><p class="heading-subtitle">Revisa las condiciones antes de postular. Cada resultado explica qué dato se usó.</p></div></div>
+          <div class="opportunity-layout"><div class="opportunity-list"><article class="opportunity-feature panel"><div class="opp-top"><span class="opportunity-type type-scholarship">BECA DE INVESTIGACIÓN</span><span class="state-pill state-open">Postulación abierta</span></div><h2>Beca de Investigación</h2><p>Apoyo para estudiantes que participan en un proyecto y completaron el curso de investigación.</p><div class="opportunity-meta"><span>Carrera · Ingeniería de Sistemas</span><span>Cierre · 24 oct. 2026</span><span>3 cupos</span></div><button class="button button-primary button-apply" type="button" id="eligibility-toggle" aria-expanded="true" aria-controls="requirements-panel">Ocultar evaluación de requisitos</button></article><article class="opportunity-mini panel"><span class="opportunity-type type-internship">PASANTÍA</span><h3>Laboratorio de Software</h3><p>Práctica de desarrollo para proyectos universitarios.</p><a href="#oportunidades">Revisar requisitos →</a></article><article class="opportunity-mini panel"><span class="opportunity-type type-course">CURSO</span><h3>Introducción a la investigación</h3><p>Curso certificado con plazas para el periodo de verano.</p><a href="#oportunidades">Revisar requisitos →</a></article></div><aside class="panel requirements-panel" id="requirements-panel" aria-labelledby="requirements-title"><div class="panel-header"><div><p class="eyebrow">EVALUACIÓN AUTOMÁTICA</p><h2 id="requirements-title">Beca de Investigación</h2></div><span class="eligibility-large">2/4</span></div><p class="requirements-intro">Estos son los requisitos publicados para la convocatoria. La elegibilidad no representa la decisión final.</p><ul class="requirement-list"><li class="requirement-met"><span aria-hidden="true">✓</span><div><strong>Promedio mínimo de 70</strong><small>82.4 · Registro académico validado</small></div><b>Cumple</b></li><li class="requirement-pending"><span aria-hidden="true">!</span><div><strong>100 puntos de trayectoria</strong><small>90 propios · Faltan 10 puntos</small></div><b>No cumple</b></li><li class="requirement-met"><span aria-hidden="true">✓</span><div><strong>Participación en un proyecto</strong><small>Proyecto de inventario · Validado</small></div><b>Cumple</b></li><li class="requirement-pending"><span aria-hidden="true">i</span><div><strong>Curso de investigación aprobado</strong><small>No hay un registro validado para este curso</small></div><b>Sin datos</b></li></ul><div class="eligibility-note"><span class="note-dot" aria-hidden="true"></span><p><strong>Datos insuficientes</strong><br>La convocatoria requiere los cuatro criterios. Puedes revisar la información con coordinación.</p></div><button class="button button-disabled" type="button" disabled aria-describedby="apply-disabled-note">Postular a esta oportunidad</button><p id="apply-disabled-note" class="disabled-help">El resultado es demostrativo. En el sistema real, la postulación respetará los requisitos publicados.</p></aside></div>
+          <div class="page-footer"><span>Cada criterio conserva una versión de las condiciones usadas</span><span>Resultado automático; decisión institucional humana</span></div>
+        </section>
+
+        <section class="page-view secondary-view" id="view-evaluaciones" aria-labelledby="evaluations-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">MEJORA ACADÉMICA / EVALUACIONES</p><h1 id="evaluations-title">Evaluación académica</h1><p class="heading-subtitle">Comparte retroalimentación estructurada para contribuir a la mejora de la enseñanza.</p></div></div>
+          <div class="evaluation-layout"><section class="panel evaluation-form"><div class="panel-header"><div><h2>Docente · Base de Datos II</h2><p>Asignatura y periodo verificados · II 2026</p></div><span class="state-pill state-open">Campaña abierta</span></div><div class="privacy-alert"><strong>Cómo se presentan las respuestas</strong><p>Tu respuesta se usará en indicadores agregados. Los resultados se suprimen si el grupo no alcanza el mínimo de respuestas. El docente no verá respuestas individuales.</p></div><form id="evaluation-form"><fieldset><legend>Valora cada aspecto de tu experiencia</legend><div class="rating-row"><div><label for="rating-clarity">Claridad de enseñanza</label><small>Explica los conceptos de forma comprensible</small></div><select id="rating-clarity" name="clarity" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div><div class="rating-row"><div><label for="rating-organization">Organización</label><small>Planificación de clases y materiales</small></div><select id="rating-organization" name="organization" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div><div class="rating-row"><div><label for="rating-content">Cumplimiento del contenido</label><small>Correspondencia con el plan de asignatura</small></div><select id="rating-content" name="content" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div><div class="rating-row"><div><label for="rating-feedback">Retroalimentación y atención</label><small>Comentarios y respuesta a consultas</small></div><select id="rating-feedback" name="feedback" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div><div class="rating-row"><div><label for="rating-punctuality">Puntualidad</label><small>Cumplimiento de horarios establecidos</small></div><select id="rating-punctuality" name="punctuality" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div><div class="rating-row"><div><label for="rating-queries">Atención a consultas</label><small>Disponibilidad y respuesta a preguntas</small></div><select id="rating-queries" name="queries" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div><div class="rating-row"><div><label for="rating-equality">Igualdad de trato percibida</label><small>Tu percepción en esta asignatura</small></div><select id="rating-equality" name="equality" required><option value="">Selecciona una opción</option><option>Muy buena</option><option>Buena</option><option>Adecuada</option><option>Necesita mejorar</option></select></div></fieldset><div class="form-foot"><p>No incluyas datos personales ni acusaciones. El formulario no admite comentarios libres.</p><button class="button button-primary" type="submit">Enviar respuesta ficticia</button></div></form><p class="prototype-form-note" id="evaluation-status" role="status" aria-live="polite"></p></section><aside class="panel evaluation-side"><span class="metric-icon blue-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 9h8m-8 4h8m-8 4h5"/></svg></span><h2>Una evaluación responsable</h2><p>Los resultados describen una percepción colectiva; no diagnostican intenciones ni determinan sanciones automáticamente.</p><ul class="plain-list"><li>Escala con criterios claros</li><li>Resultados estadísticos agregados</li><li>Revisión institucional cuando corresponda</li><li>Acceso limitado por carrera y periodo</li></ul></aside></div>
+          <div class="page-footer"><span>Evaluación académica · Prototipo de diseño</span><span>Sin envío ni almacenamiento real</span></div>
+        </section>
+
+        <section class="page-view secondary-view" id="view-apoyo" aria-labelledby="support-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">MI ESPACIO / ACOMPAÑAMIENTO</p><h1 id="support-title">Tu acompañamiento</h1><p class="heading-subtitle">Recomendaciones para avanzar, basadas en información de tu periodo.</p></div></div><div class="support-highlight"><span class="support-highlight-icon" aria-hidden="true">i</span><div><h2>Tu progreso se revisa contigo</h2><p>Esta vista muestra cambios en tu propia trayectoria. Una recomendación no cambia tus notas, puntos ni acceso a oportunidades.</p></div></div><section class="panel"><div class="panel-header"><div><h2>Plan de apoyo · II · 2026</h2><p>Visible para ti y el equipo académico asignado</p></div><span class="state-pill state-open">En seguimiento</span></div><div class="support-action"><span class="action-date">12<span>OCT</span></span><div><strong>Tutoría de programación</strong><p>Revisar ejercicios de estructuras de datos</p><small>Responsable: equipo de tutoría · Próxima actividad sugerida</small></div><span class="state-pill state-pending">Pendiente</span></div><div class="support-action"><span class="action-date action-complete">01<span>OCT</span></span><div><strong>Asesoría de estudio</strong><p>Plan de preparación del periodo</p><small>Actividad registrada · II · 2026</small></div><span class="state-pill state-validated">Completada</span></div></section><div class="page-footer"><span>Recomendaciones confidenciales</span><span>Sin penalización automática</span></div>
+        </section>
+
+        <section class="page-view secondary-view" id="view-movimientos" aria-labelledby="points-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">MI CUENTA / SPD</p><h1 id="points-title">Mis puntos</h1><p class="heading-subtitle">Consulta el origen, la regla y el motivo de cada movimiento.</p></div></div><div class="metric-grid points-summary"><article class="metric-card"><span class="metric-label">Mérito propio</span><div class="metric-value">90 <span>puntos</span></div><div class="metric-foot">Determina tu nivel actual</div></article><article class="metric-card"><span class="metric-label">Puntos recibidos</span><div class="metric-value">0 <span>puntos</span></div><div class="metric-foot">Se muestran por separado</div></article><article class="metric-card"><span class="metric-label">Disponible para transferir</span><div class="metric-value">5 <span>puntos</span></div><div class="metric-foot">Solo categorías habilitadas</div></article></div><section class="panel"><div class="panel-header"><div><h2>Historial de movimientos</h2><p>Actividad verificada por tu carrera</p></div><span class="state-pill state-validated">Reglamento demostrativo</span></div><div class="ledger-item"><div class="ledger-sign">+20</div><div><strong>Proyecto académico · Gestor de inventario</strong><small>Regla SPD · Evidencia validada · 25 sept. 2026</small></div><a href="#movimientos">Ver motivo</a></div><div class="ledger-item"><div class="ledger-sign">+10</div><div><strong>Curso certificado · Python aplicado</strong><small>Regla SPD · Certificado validado · 18 ago. 2026</small></div><a href="#movimientos">Ver motivo</a></div><div class="ledger-item"><div class="ledger-sign">+5</div><div><strong>Seminario · Sistemas distribuidos</strong><small>Regla SPD · Evidencia validada · 14 ago. 2026</small></div><a href="#movimientos">Ver motivo</a></div></section><div class="page-footer"><span>Puntos SPD no equivalen a calificaciones</span><span>Datos demostrativos</span></div>
+        </section>
+        <section class="page-view secondary-view" id="view-docente" aria-labelledby="teacher-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">DOCENCIA / INGENIERÍA DE SISTEMAS</p><h1 id="teacher-title">Revisión de evidencias</h1><p class="heading-subtitle">Bandeja ficticia del grupo SIS-302 · II 2026.</p></div></div>
+          <div class="metric-grid"><article class="metric-card"><span class="metric-label">Pendientes de revisión</span><div class="metric-value">4</div><div class="metric-foot">Asignadas a tu grupo</div></article><article class="metric-card"><span class="metric-label">Respondidas esta semana</span><div class="metric-value">12</div><div class="metric-foot">Tiempo medio: 1.4 días</div></article><article class="metric-card"><span class="metric-label">Actividades del grupo</span><div class="metric-value">18</div><div class="metric-foot">Periodo II · 2026</div></article></div>
+          <section class="panel staff-panel"><div class="panel-header"><div><h2>Bandeja de revisión</h2><p>Acceso limitado a grupos y evidencias asignadas</p></div><span class="state-pill state-open">4 pendientes</span></div><div class="table-scroll"><table><caption>Registros ficticios de Ingeniería de Sistemas</caption><thead><tr><th scope="col">Estudiante</th><th scope="col">Actividad</th><th scope="col">Enviado</th><th scope="col">Estado</th><th scope="col">Acción</th></tr></thead><tbody><tr><th scope="row">María Flores</th><td>Feria de proyectos</td><td>08 oct.</td><td>En revisión</td><td><button class="button button-outline button-small demo-action" type="button">Abrir revisión</button></td></tr><tr><th scope="row">Luis Mamani</th><td>Curso Python aplicado</td><td>07 oct.</td><td>En revisión</td><td><button class="button button-outline button-small demo-action" type="button">Abrir revisión</button></td></tr><tr><th scope="row">Camila Rojas</th><td>Proyecto de inventario</td><td>06 oct.</td><td>Observada</td><td><button class="button button-outline button-small demo-action" type="button">Ver historial</button></td></tr></tbody></table></div></section>
+          <div class="prototype-note">La vista de rol solo cambia la navegación de demostración. No representa autenticación, permisos efectivos ni revisión guardada.</div>
+        </section>
+        <section class="page-view secondary-view" id="view-coordinacion" aria-labelledby="coord-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">COORDINACIÓN / INGENIERÍA DE SISTEMAS</p><h1 id="coord-title">Panel de carrera</h1><p class="heading-subtitle">Indicadores agregados del periodo II · 2026.</p></div></div>
+          <div class="metric-grid"><article class="metric-card"><span class="metric-label">Matrículas activas</span><div class="metric-value">286</div><div class="metric-foot">Dato de demostración</div></article><article class="metric-card"><span class="metric-label">Evidencias pendientes</span><div class="metric-value">17</div><div class="metric-foot">En 8 grupos</div></article><article class="metric-card"><span class="metric-label">Campaña docente</span><div class="metric-value">68<span>%</span></div><div class="metric-foot">9 respuestas agregables</div></article></div>
+          <div class="content-grid staff-panels"><section class="panel"><div class="panel-header"><div><h2>Evaluaciones agregadas</h2><p>Solo grupos sobre el umbral de privacidad</p></div></div><div class="aggregate-card"><strong>Base de Datos II · Grupo A</strong><p>9 respuestas · mínimo requerido: 5</p><div class="aggregate-score">4.2 <span>/ 5 · Claridad de enseñanza</span></div><p class="muted-copy">No se exponen respuestas individuales ni comentarios libres.</p></div></section><section class="panel"><div class="panel-header"><div><h2>Seguimiento académico</h2><p>Acceso restringido al equipo asignado</p></div></div><div class="support-highlight"><div><strong>12 casos con seguimiento activo</strong><p>Las señales apoyan una conversación; no alteran notas ni generan sanciones.</p></div></div><button class="button button-outline demo-action" type="button">Ver panel de seguimiento</button></section></div>
+          <div class="prototype-note">Cifras ficticias. El umbral y las reglas deben configurarse antes de campañas reales.</div>
+        </section>
+        <section class="page-view secondary-view" id="view-administracion" aria-labelledby="admin-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">ADMINISTRACIÓN / ÁMBITO INSTITUCIONAL</p><h1 id="admin-title">Configuración académica</h1><p class="heading-subtitle">Gestión estructural con alcance y trazabilidad.</p></div></div>
+          <div class="metric-grid"><article class="metric-card"><span class="metric-label">Carreras activas</span><div class="metric-value">4</div><div class="metric-foot">Ingeniería de Sistemas · datos demo</div></article><article class="metric-card"><span class="metric-label">Asignaciones por revisar</span><div class="metric-value">3</div><div class="metric-foot">Roles y ámbitos</div></article><article class="metric-card"><span class="metric-label">Versión de reglas SPD</span><div class="metric-value">1.0</div><div class="metric-foot">Demostrativa · no aprobada</div></article></div>
+          <section class="panel staff-panel"><div class="panel-header"><div><h2>Ámbitos configurados</h2><p>Las asignaciones son explícitas y auditables</p></div><button class="button button-primary demo-action" type="button">Nueva asignación</button></div><div class="table-scroll"><table><caption>Ejemplos ficticios de alcance académico</caption><thead><tr><th scope="col">Elemento</th><th scope="col">Ámbito</th><th scope="col">Estado</th><th scope="col">Revisión</th></tr></thead><tbody><tr><th scope="row">Coordinación</th><td>Ingeniería de Sistemas</td><td>Activa</td><td><button class="button button-outline button-small demo-action" type="button">Consultar</button></td></tr><tr><th scope="row">Periodo II · 2026</th><td>Ingeniería de Sistemas</td><td>Abierto</td><td><button class="button button-outline button-small demo-action" type="button">Consultar</button></td></tr><tr><th scope="row">Reglas SPD · v1</th><td>Demostración</td><td>No aprobada</td><td><button class="button button-outline button-small demo-action" type="button">Ver bitácora</button></td></tr></tbody></table></div></section>
+          <div class="prototype-note">Los cambios administrativos reales requieren autorización, alcance validado y registro de auditoría.</div>
+        </section>
+      </main>
+    </div>
+    <div class="toast-region" id="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+</body>
+</html>

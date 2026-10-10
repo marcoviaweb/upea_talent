@@ -1,0 +1,21 @@
+{% load static %}<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071a35" />
+    <meta name="description" content="Portal de trayectoria académica UPEA Talent+." />
+    <title>UPEA Talent+ · Trayectoria</title>
+    {% if frontend_dev_server %}
+      <script type="module" src="http://127.0.0.1:5173/@vite/client"></script>
+      <script type="module" src="http://127.0.0.1:5173/src/main.tsx"></script>
+    {% else %}
+      <link rel="stylesheet" href="{% static 'profiles/frontend/assets/index.css' %}" />
+      <script type="module" src="{% static 'profiles/frontend/assets/main.js' %}"></script>
+    {% endif %}
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
+    <div id="root"></div>
+  </body>
+</html>
