@@ -14,7 +14,10 @@ type Points = { enrollment: string; career: string; period: string; points: numb
 type AdminCandidate = { id: string; student: string; studentNumber: string; career: string; careerCode: string; period: string };
 type Data = { regulations: Regulation[]; totals: Points[]; levelThresholds: Array<{ name: string; from: number; to: number | null }> };
 
-const labels: Record<string, string> = { in_review: "En revisión", observed: "Necesita ajustes", approved: "Aprobada", rejected: "No aprobada", revoked: "Revocada" };
+const labels: Record<string, string> = {
+  in_review: "En revisión", observed: "Necesita ajustes", approved: "Aprobada", rejected: "No aprobada", revoked: "Revocada",
+  approve: "Aprobada", observe: "Observada", reject: "Rechazada", revoke: "Revocada",
+};
 const needsReviewCount = (rows: Activity[]) => rows.filter((activity) => activity.canReview && ["in_review", "observed"].includes(activity.status)).length;
 
 export default function E06Page({ enrollments, canRegisterVerifiedActivity = false }: { enrollments: Enrollment[]; canRegisterVerifiedActivity?: boolean }) {

@@ -104,7 +104,7 @@ def create_campaign(*, actor, offering_id, title, opens_at, closes_at, minimum_r
     )
     record_event(actor=actor, action="evaluation.campaign_created", obj=campaign,
                  scope_type="career", scope_id=career.pk,
-                 reason="Creación de campaña estructurada de demostración.",
+                 reason="Creación de campaña de evaluación estructurada.",
                  safe_metadata={"version": version, "offering": str(offering.pk), "questionnaire": QUESTIONNAIRE_VERSION})
     return campaign
 

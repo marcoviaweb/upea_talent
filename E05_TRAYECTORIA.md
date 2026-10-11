@@ -13,7 +13,7 @@
 - Proyectos y habilidades pueden guardarse como borrador y enviarse a revisión. El estudiante puede editar sus registros propios declarados o que requieren cambios mientras su matrícula siga activa. No puede validar su propia declaración.
 - Docentes/revisores pueden consultar perfiles únicamente desde listas de grupo a las que estén asignados y resolver declaraciones con validación o comentario obligatorio al pedir cambios. Se registran actor, fecha y eventos en auditoría.
 - Componentes web compartidos con HTML semántico, foco visible, enlace para saltar al contenido, etiquetas de formularios, anuncios de estado, mensajes vacíos, tablas adaptables y CSS local sin fuentes/CDN externos.
-- `seed_demo`, tras crear un superusuario técnico, permite crear de forma idempotente tres estudiantes, un docente, dos periodos de trayectoria, matrículas y grupos ficticios, notas históricas sintéticas, un proyecto en revisión y una habilidad declarada. Las cuentas sintéticas no tienen contraseña conocida ni utilizable hasta que el operador les asigne una localmente.
+- `seed_demo`, tras crear un superusuario técnico, crea de forma idempotente cinco estudiantes, un docente, coordinación, cuatro periodos de catálogo y cinco asignaturas ficticias. La trayectoria demostrativa abarca I/2026 y II/2026; Mateo cuenta además con un periodo cerrado anterior con notas verificadas para la comparación segura que usa E10. Las cuentas sintéticas no tienen contraseña conocida ni utilizable hasta que el operador les asigne una localmente.
 
 ## Probar en el portal
 

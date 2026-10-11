@@ -89,7 +89,7 @@ Primero crea una cuenta técnica para el panel. Django te pedirá nombre de usua
 .\.venv\Scripts\python.exe manage.py createsuperuser
 ```
 
-Después de crearla, vuelve a ejecutar `manage.py seed_demo` para generar las cuentas sintéticas, trayectorias, oportunidades y ejemplos. Para probar E07, asigna una clave local a `demo.estudiante01` y `demo.coordinador01`; para E08, también a `demo.estudiante02` y `demo.estudiante03`, con `manage.py changepassword <usuario>`.
+Después de crearla, ejecuta `manage.py seed_demo` para preparar las cuentas, trayectorias, oportunidades y casos de cada módulo. Para probar el recorrido del jurado, asigna claves locales a `demo.estudiante05`, `demo.docente01` y `demo.coordinador01` con `manage.py changepassword <usuario>`; las cuentas conservan permisos distintos por rol.
 
 Inicia el frontend y el backend en **dos ventanas de PowerShell**. En la primera ejecuta Django:
 
@@ -148,7 +148,9 @@ Con PostgreSQL iniciado, ejecuta desde la raíz del proyecto:
 
 Las pruebas cubren los módulos entregados, incluida elegibilidad, postulaciones, límites de E08, privacidad, habilitación, umbral de cinco y agregación anónima de E09. `npm run typecheck` y `npm run build` comprueban el frontend. Consulta [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md) para los recorridos.
 
-El comando `seed_demo` carga datos ficticios de Ingeniería de Sistemas. Es idempotente, no establece contraseñas y, si ya existe un superusuario, añade cinco estudiantes, un docente, coordinación, cursos, trayectoria, reglamento SPD, una beca de investigación, ejemplos E08 y una campaña abierta E09 para cinco respondientes. Guías de recorrido: [E04_IDENTIDAD_ACADEMIA.md](E04_IDENTIDAD_ACADEMIA.md), [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md).
+El comando `seed_demo` prepara el entorno local de Ingeniería de Sistemas. Es idempotente y no establece contraseñas. Con una cuenta técnica activa crea cinco estudiantes, una docente, coordinación, cursos, trayectorias y reglamento SPD. Valeria Quispe queda con 90 puntos propios, notas verificadas, proyecto validado y una declaración adjunta pendiente de revisión; al aprobarla, suma 10 puntos y cruza al nivel Participante. También se prepara una beca en borrador con criterios de elegibilidad, una campaña E09 abierta para pruebas y un agregado de evaluación ya publicado que respeta el mínimo de cinco respuestas. La declaración de apoyo del recorrido está en [output/pdf/constancia_curso_investigacion.pdf](output/pdf/constancia_curso_investigacion.pdf). Guías de módulos: [E04_IDENTIDAD_ACADEMIA.md](E04_IDENTIDAD_ACADEMIA.md), [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md).
+
+Para el plan de preparación y ensayo del recorrido completo de feria, consulta [PLAN_FLUJO_JURADO.md](PLAN_FLUJO_JURADO.md).
 
 ## Problemas habituales
 

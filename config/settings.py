@@ -36,7 +36,9 @@ INSTALLED_APPS = [
     "apps.opportunities.apps.OpportunitiesConfig",
     "apps.transfers.apps.TransfersConfig",
     "apps.evaluations.apps.EvaluationsConfig",
+    "apps.support.apps.SupportConfig",
     "apps.audit.apps.AuditConfig",
+    "apps.reporting.apps.ReportingConfig",
 ]
 
 MIDDLEWARE = [
@@ -47,6 +49,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.presentation.LegacyPresentationTextMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -102,6 +105,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
+SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "0" if DEBUG else "1").strip().lower() in {"1", "true", "yes"}
+SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "0").strip().lower() in {"1", "true", "yes"}
+SECURE_HSTS_PRELOAD = os.getenv("DJANGO_SECURE_HSTS_PRELOAD", "0").strip().lower() in {"1", "true", "yes"}
+SESSION_COOKIE_SECURE = os.getenv("DJANGO_SESSION_COOKIE_SECURE", "0" if DEBUG else "1").strip().lower() in {"1", "true", "yes"}
+CSRF_COOKIE_SECURE = os.getenv("DJANGO_CSRF_COOKIE_SECURE", "0" if DEBUG else "1").strip().lower() in {"1", "true", "yes"}
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()

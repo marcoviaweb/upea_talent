@@ -2,14 +2,16 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, BookOpenCheck, BriefcaseBusiness, CalendarDays,
-  Check, CheckCircle2, ChevronDown, CircleHelp, GraduationCap, LayoutDashboard,
+  Check, CheckCircle2, ChevronDown, CircleHelp, FileBarChart2, GraduationCap, LayoutDashboard,
   Lightbulb, LoaderCircle, LockKeyhole, LogOut, Menu, MessageSquareText, Plus, Search, ShieldCheck, Sparkles, UserRound,
-  UsersRound, X,
+  UsersRound, X, HandHeart,
 } from "lucide-react";
 import { api, dateLabel, errorMessage, signIn, signOut, type DevelopmentRecord, type Enrollment, type HomeData, type Profile } from "./api";
 import E06Page from "./features/e06/E06Page";
 import E07Page from "./features/e07/E07Page";
 import E09Page from "./features/e09/E09Page";
+import E10Page from "./features/e10/E10Page";
+import E11Page from "./features/e11/E11Page";
 
 function Spinner({ label = "Cargando tu espacio" }: { label?: string }) {
   return <div className="loading-state" role="status"><LoaderCircle size={20} className="spin" /><span>{label}</span></div>;
@@ -51,6 +53,8 @@ function App() {
       <Route path="/trayectoria/transferencias/" element={<EvidencePage />} />
       <Route path="/trayectoria/oportunidades/" element={<E07Page />} />
       <Route path="/trayectoria/evaluaciones/" element={<E09Page />} />
+      <Route path="/trayectoria/acompanamiento/" element={<E10Page />} />
+      <Route path="/trayectoria/gestion/" element={<E11Page />} />
       <Route path="/trayectoria/matricula/:enrollmentId/" element={<ProfilePage />} />
       <Route path="/trayectoria/grupo/:offeringId/" element={<RosterPage />} />
       <Route path="/trayectoria/matricula/:enrollmentId/nuevo/:recordType/" element={<DevelopmentFormPage />} />
@@ -112,6 +116,8 @@ function AppShell({ home, loading, error, reload, onLogout }: { home: HomeData |
         <NavLink to="/trayectoria/evidencias/" className={({ isActive }) => `nav-item ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><ShieldCheck size={18} />Evidencias y SPD</NavLink>
         <NavLink to="/trayectoria/oportunidades/" className={({ isActive }) => `nav-item ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><BriefcaseBusiness size={18} />Oportunidades</NavLink>
         <NavLink to="/trayectoria/evaluaciones/" className={({ isActive }) => `nav-item ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><MessageSquareText size={18} />Evaluación académica</NavLink>
+        <NavLink to="/trayectoria/acompanamiento/" className={({ isActive }) => `nav-item ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><HandHeart size={18} />Acompañamiento</NavLink>
+        <NavLink to="/trayectoria/gestion/" className={({ isActive }) => `nav-item ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><FileBarChart2 size={18} />Gestión y análisis</NavLink>
         {home.groups.length > 0 && <div className="nav-section"><span className="sidebar-caption">DOCENCIA</span>{home.groups.slice(0, 4).map((group) => <NavLink key={group.id} to={`/trayectoria/grupo/${group.id}/`} className={({ isActive }) => `nav-item nav-subitem ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><UsersRound size={17} /><span className="nav-truncate">{group.course.code} · {group.group}</span></NavLink>)}</div>}
       </nav>
       <div className="sidebar-bottom"><div className="help-card"><div className="help-icon"><CircleHelp size={16} /></div><strong>¿Necesitas ayuda?</strong><span>Contacta a tu coordinación académica.</span></div><div className="sidebar-version"><span className="version-dot" /> Portal académico · v1.0</div></div>

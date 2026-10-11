@@ -139,7 +139,7 @@ def resubmit_activity(*, actor, activity, uploaded_file):
 
 def seed_regulation(*, career, actor):
     today = date.today()
-    regulation, created = Regulation.objects.get_or_create(career=career, version=1, defaults={"title": "Reglamento SPD de demostración · v1", "effective_from": date(2026, 1, 1), "published": False, "created_by": actor})
+    regulation, created = Regulation.objects.get_or_create(career=career, version=1, defaults={"title": "Reglamento SPD · v1", "effective_from": date(2026, 1, 1), "published": False, "created_by": actor})
     rows = [
         ("approved_course", "Aprobar una materia", "Nota verificada de aprobación registrada por personal autorizado.", 10),
         ("improved_performance", "Mejorar rendimiento", "Comparación verificada con el periodo anterior.", 15),
@@ -160,7 +160,7 @@ def seed_regulation(*, career, actor):
         regulation.published_by = actor
         regulation.published_at = timezone.now()
         regulation.save(update_fields=("published", "published_by", "published_at"))
-        record_event(actor=actor, action="spd.regulation_published", obj=regulation, scope_type="career", scope_id=career.pk, reason="Publicación del reglamento ficticio inicial", safe_metadata={"version": regulation.version})
+        record_event(actor=actor, action="spd.regulation_published", obj=regulation, scope_type="career", scope_id=career.pk, reason="Publicación del reglamento SPD inicial", safe_metadata={"version": regulation.version})
     elif not AuditEvent.objects.filter(action="spd.regulation_published", object_type="activities.regulation", object_id=str(regulation.pk)).exists():
-        record_event(actor=regulation.published_by or actor, action="spd.regulation_published", obj=regulation, scope_type="career", scope_id=career.pk, reason="Registro de publicación del reglamento ficticio inicial", safe_metadata={"version": regulation.version})
+        record_event(actor=regulation.published_by or actor, action="spd.regulation_published", obj=regulation, scope_type="career", scope_id=career.pk, reason="Registro de publicación del reglamento SPD inicial", safe_metadata={"version": regulation.version})
     return regulation

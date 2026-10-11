@@ -1,7 +1,29 @@
+import json
 from unittest.mock import patch
 
 from django.db import OperationalError
-from django.test import SimpleTestCase, TestCase
+from django.http import JsonResponse
+from django.test import RequestFactory, SimpleTestCase, TestCase
+
+from .presentation import LegacyPresentationTextMiddleware, clean_legacy_text
+
+
+class LegacyPresentationTextTests(SimpleTestCase):
+    def test_known_legacy_markers_are_removed_from_api_text(self):
+        self.assertEqual(clean_legacy_text("Ingeniería de Sistemas (datos ficticios)"), "Ingeniería de Sistemas")
+        self.assertEqual(clean_legacy_text("Reglamento SPD de demostración · v1"), "Reglamento SPD · v1")
+
+    def test_api_json_is_cleaned_recursively(self):
+        request = RequestFactory().get("/api/v1/profile/", HTTP_ACCEPT="application/json")
+        middleware = LegacyPresentationTextMiddleware(
+            lambda _request: JsonResponse({"career": "Ingeniería de Sistemas (datos ficticios)",
+                                           "activity": {"source": "Constancia sintética de seed_demo"}})
+        )
+        response = middleware(request)
+        self.assertEqual(json.loads(response.content), {
+            "career": "Ingeniería de Sistemas",
+            "activity": {"source": "Registro de participación académica"},
+        })
 
 
 class LivenessEndpointTests(SimpleTestCase):

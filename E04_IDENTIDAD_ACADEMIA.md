@@ -12,7 +12,7 @@
 - Concesión y revocación de roles se hacen mediante servicios transaccionales; requieren actor autorizado, motivo y evento de auditoría. No permiten autoasignación. Las cuentas desactivadas pierden acceso sin borrar historial.
 - Auditoría básica guarda contexto seguro y es inmutable desde el modelo de aplicación. No debe incluir contraseñas, tokens, contenido de respuestas de evaluación ni datos secretos.
 - El panel técnico `/admin/` está restringido a superusuarios. Solo administra catálogos académicos; matrículas/perfiles no se exponen allí. Ser superusuario técnico no concede acceso mediante los servicios de consulta académica.
-- `seed_demo` carga de forma idempotente una institución/carrera ficticias, tres periodos, cuatro asignaturas y grupos de Ingeniería de Sistemas. Tras crear un superusuario, también carga cuentas sintéticas y asignaciones sin contraseñas predefinidas.
+- `seed_demo` carga de forma idempotente una institución/carrera ficticias, cuatro periodos, cinco asignaturas y grupos de Ingeniería de Sistemas. Tras crear un superusuario, también carga cuentas sintéticas y asignaciones sin contraseñas predefinidas.
 
 ## Preparar y probar
 
