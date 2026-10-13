@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 from decimal import Decimal
 
-from django.db.models import Avg, DecimalField, ExpressionWrapper, F, Q, Sum, Value
+from django.db.models import Avg, Count, DecimalField, ExpressionWrapper, F, Q, Sum, Value
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import status
@@ -10,9 +10,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.accounts.models import RoleAssignment
+from apps.accounts.models import RoleAssignment, User
 from apps.accounts.permissions import current_role_assignments
-from apps.academics.models import AcademicPeriod, Career, CourseEnrollment, Enrollment, GradeRecord
+from apps.academics.models import AcademicPeriod, Career, Course, CourseEnrollment, CourseOffering, Enrollment, GradeRecord, StudentProfile
 from apps.activities.models import Activity, PointsMovement
 from apps.audit.models import AuditEvent
 from apps.opportunities.models import Application, Opportunity
@@ -105,6 +105,46 @@ def _personal_report(user):
              "definition": definition, "denominator": denominator} for name, value, definition, denominator in rows]
 
 
+def _report_charts(career, period=None):
+    enrollments = Enrollment.objects.filter(career=career)
+    activities = Activity.objects.filter(enrollment__career=career)
+    applications = Application.objects.filter(enrollment__career=career)
+    if period:
+        enrollments = enrollments.filter(period=period)
+        activities = activities.filter(enrollment__period=period)
+        applications = applications.filter(enrollment__period=period)
+    periods = list(AcademicPeriod.objects.filter(career=career).order_by("starts_on"))
+    activity = list(activities.values("enrollment__period_id").annotate(total=Count("pk")))
+    application = list(applications.values("enrollment__period_id").annotate(total=Count("pk")))
+    activity_by_period = {str(row["enrollment__period_id"]): row["total"] for row in activity}
+    applications_by_period = {str(row["enrollment__period_id"]): row["total"] for row in application}
+    evidence_statuses = [{"label": label, "value": activities.filter(status=value).count()}
+                         for value, label in Activity.Status.choices]
+    opportunities = Opportunity.objects.filter(active_version__careers=career)
+    if period:
+        opportunities = opportunities.filter(active_version__opens_at__date__lte=period.ends_on,
+                                             active_version__closes_at__date__gte=period.starts_on)
+    opportunity_statuses = [{"label": label, "value": opportunities.filter(status=value).distinct().count()}
+                            for value, label in Opportunity.Status.choices]
+    balance = enrollments.values("pk").annotate(total=Sum("spd_movements__points"))
+    levels = ((0, 99, "Explorador"), (100, 249, "Participante"), (250, 499, "Desarrollador"),
+              (500, 749, "Líder"), (750, None, "Talento destacado"))
+    totals = [0] * len(levels)
+    for row in balance:
+        score = row["total"] or 0
+        for index, (lower, upper, _) in enumerate(levels):
+            if score >= lower and (upper is None or score <= upper):
+                totals[index] += 1
+                break
+    return {
+        "activityByPeriod": [{"label": p.code, "detail": p.name, "value": activity_by_period.get(str(p.pk), 0)} for p in periods],
+        "pointsDistribution": [{"label": level[2], "value": totals[index]} for index, level in enumerate(levels)],
+        "evidenceStatuses": evidence_statuses,
+        "opportunityStatuses": opportunity_statuses,
+        "applicationsByPeriod": [{"label": p.code, "detail": p.name, "value": applications_by_period.get(str(p.pk), 0)} for p in periods],
+    }
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_report(request):
@@ -135,12 +175,15 @@ def api_report(request):
         if not period:
             return Response({"detail": "El periodo no pertenece a una carrera autorizada."}, status=status.HTTP_404_NOT_FOUND)
     rows = []
+    charts = []
     for career in selected:
+        if period and period.career_id != career.pk:
+            continue
         for name, value, definition, denominator in _report_rows(career, period if period and period.career_id == career.pk else None):
-            if period and period.career_id != career.pk:
-                continue
             rows.append({"career": career.name, "careerCode": career.code, "metric": name, "value": value,
                          "definition": definition, "denominator": denominator})
+        charts.append({"career": career.name, "careerCode": career.code,
+                       **_report_charts(career, period if period and period.career_id == career.pk else None)})
     filters = {"career": str(selected[0].pk) if len(selected) == 1 else "", "period": str(period.pk) if period else ""}
     if request.query_params.get("export") == "csv":
         response = HttpResponse(content_type="text/csv; charset=utf-8")
@@ -161,7 +204,7 @@ def api_report(request):
     return Response({"canManage": True, "careers": [{"id": str(c.pk), "name": c.name, "code": c.code} for c in available_careers],
                      "periods": [{"id": str(p.pk), "name": p.name, "code": p.code, "careerId": str(p.career_id)} for p in AcademicPeriod.objects.filter(career__in=selected).order_by("-starts_on")],
                      "selectedPeriod": str(period.pk) if period else "", "rows": rows,
-                     "source": "Matrículas, notas verificadas, evidencias, movimientos SPD, oportunidades, postulaciones, transferencias y acompañamiento.",
+                     "charts": charts, "source": "Matrículas, notas verificadas, evidencias, movimientos SPD, oportunidades, postulaciones, transferencias y acompañamiento.",
                      "extractedAt": timezone.localtime().isoformat(timespec="seconds"), "filters": filters})
 
 
@@ -201,12 +244,33 @@ def api_audit(request):
             rows = rows.filter(occurred_at__date__lte=datetime.strptime(end, "%Y-%m-%d").date())
     except ValueError:
         return Response({"detail": "Usa fechas con formato AAAA-MM-DD."}, status=400)
-    rows = rows.select_related("actor").order_by("-occurred_at")[:200]
+    try:
+        page = max(1, int(request.query_params.get("page", "1")))
+        page_size = min(100, max(1, int(request.query_params.get("pageSize", "25"))))
+    except ValueError:
+        return Response({"detail": "La página y el tamaño deben ser números enteros."}, status=400)
+    total = rows.count()
+    if request.query_params.get("export") == "csv":
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="upea-talent-bitacora.csv"'
+        response.write("\ufeff")
+        writer = csv.writer(response)
+        writer.writerow(("Fecha", "Actor", "Acción", "Tipo de objeto", "Identificador", "Ámbito", "Resultado", "Motivo"))
+        for event in rows.select_related("actor").order_by("-occurred_at"):
+            actor = event.actor.get_full_name() or event.actor.username if event.actor_id else "Proceso de autenticación"
+            values = (timezone.localtime(event.occurred_at).isoformat(), actor, event.action, event.object_type,
+                      event.object_id, f"{event.scope_type}:{event.scope_id}", event.result, event.reason)
+            writer.writerow([("'" + value if isinstance(value, str) and value.lstrip(" \t\r\n").startswith(("=", "+", "-", "@")) else value)
+                             for value in values])
+        return response
+    rows = rows.select_related("actor").order_by("-occurred_at")[(page - 1) * page_size:page * page_size]
     today = timezone.localdate()
     payload = []
     for event in rows:
         role_snapshot = event.safe_metadata.get("actorRoles", [])
-        if isinstance(role_snapshot, list) and role_snapshot and all(
+        if not event.actor_id:
+            role_scope = "Autenticación"
+        elif isinstance(role_snapshot, list) and role_snapshot and all(
             isinstance(item, dict) and "role" in item and "scopeCode" in item for item in role_snapshot
         ):
             role_scope = ", ".join(f"{item['role']} · {item['scopeCode']}" for item in role_snapshot)
@@ -215,11 +279,115 @@ def api_audit(request):
         else:
             roles = current_role_assignments(event.actor).filter(starts_at__lte=today).values_list("role", "scope", "career__code", "institution__short_name")
             role_scope = ", ".join(f"{role} · {career or institution or scope}" for role, scope, career, institution in roles) or "Sin asignación vigente"
-        payload.append({"id": str(event.pk), "actor": event.actor.get_full_name() or event.actor.username, "roleScope": role_scope,
+        payload.append({"id": str(event.pk), "actor": (event.actor.get_full_name() or event.actor.username) if event.actor_id else "Intento de acceso",
+                        "roleScope": role_scope,
                         "action": event.action, "objectType": event.object_type, "objectId": event.object_id,
                         "scope": f"{event.scope_type}:{event.scope_id}" if event.scope_id else "—", "result": event.result,
                         "reason": event.reason, "occurredAt": event.occurred_at.isoformat()})
-    return Response({"events": payload, "limit": 200, "readOnly": True})
+    return Response({"events": payload, "page": page, "pageSize": page_size, "total": total,
+                     "pages": (total + page_size - 1) // page_size, "readOnly": True})
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def api_academic_admin(request):
+    careers = manageable_careers(request.user)
+    if not careers.exists():
+        return Response({"detail": "No tienes autorización para administrar carreras."}, status=403)
+    if request.method == "GET":
+        periods = AcademicPeriod.objects.filter(career__in=careers).select_related("career")
+        courses = Course.objects.filter(career__in=careers).select_related("career")
+        offerings = CourseOffering.objects.filter(course__career__in=careers).select_related("course", "period")
+        students = StudentProfile.objects.filter(institution__in=careers.values("institution_id")).select_related("user", "institution")
+        enrollments = Enrollment.objects.filter(career__in=careers).select_related("student__user", "period", "career")
+        grade_careers = Career.objects.none() if not request.user.is_superuser else careers
+        student_careers = Career.objects.none() if not request.user.is_superuser else careers
+        if not request.user.is_superuser:
+            roles = current_role_assignments(request.user)
+            career_admin_ids = roles.filter(scope="career", role=RoleAssignment.Role.CAREER_ADMIN).values("career_id")
+            institution_admin_ids = roles.filter(scope="institution", role=RoleAssignment.Role.INSTITUTION_ADMIN).values("institution_id")
+            grade_careers = careers.filter(pk__in=career_admin_ids)
+            student_careers = careers.filter(Q(pk__in=career_admin_ids) | Q(institution_id__in=institution_admin_ids))
+        return Response({
+            "careers": [{"id": str(c.pk), "code": c.code, "name": c.name, "institutionId": str(c.institution_id)} for c in careers],
+            "gradeCareerIds": [str(pk) for pk in grade_careers.values_list("pk", flat=True)],
+            "studentCareerIds": [str(pk) for pk in student_careers.values_list("pk", flat=True)],
+            "periods": [{"id": str(p.pk), "careerId": str(p.career_id), "careerCode": p.career.code, "code": p.code, "name": p.name, "startsOn": p.starts_on.isoformat(), "endsOn": p.ends_on.isoformat(), "status": p.status} for p in periods],
+            "courses": [{"id": str(c.pk), "careerId": str(c.career_id), "careerCode": c.career.code, "code": c.code, "name": c.name, "credits": c.credits, "active": c.active} for c in courses],
+            "offerings": [{"id": str(o.pk), "courseId": str(o.course_id), "periodId": str(o.period_id), "label": f"{o.course.code} · {o.group_code} · {o.period.code}", "status": o.status} for o in offerings],
+            "students": [{"id": str(s.pk), "institutionId": str(s.institution_id), "institution": s.institution.short_name, "studentNumber": s.student_number, "name": s.user.get_full_name() or s.user.username} for s in students],
+            "enrollments": [{"id": str(e.pk), "careerId": str(e.career_id), "periodId": str(e.period_id), "studentId": str(e.student_id), "studentNumber": e.student.student_number, "student": e.student.user.get_full_name() or e.student.user.username, "semester": e.semester_number, "status": e.status} for e in enrollments],
+        })
+    from django.core.exceptions import ValidationError
+    from django.db import transaction
+    from apps.audit.services import record_event
+    data = request.data
+    kind = data.get("kind")
+    career = careers.filter(pk=data.get("careerId")).first()
+    if not career:
+        return Response({"detail": "Selecciona una carrera dentro de tu ámbito."}, status=404)
+    try:
+        with transaction.atomic():
+            if kind == "period":
+                item = AcademicPeriod(career=career, code=data.get("code", "").strip(), name=data.get("name", "").strip(),
+                    starts_on=data.get("startsOn"), ends_on=data.get("endsOn"), status=data.get("status", AcademicPeriod.Status.PLANNED),
+                    grade_scale=data.get("gradeScale", 100), pass_threshold=data.get("passThreshold", 51))
+                item.full_clean(); item.save(); action = "admin.period_created"
+            elif kind == "course":
+                item = Course(career=career, code=data.get("code", "").strip(), name=data.get("name", "").strip(), credits=data.get("credits", 0))
+                item.full_clean(); item.save(); action = "admin.course_created"
+            elif kind == "offering":
+                course = Course.objects.filter(pk=data.get("courseId"), career=career).first()
+                period = AcademicPeriod.objects.filter(pk=data.get("periodId"), career=career).first()
+                if not course or not period:
+                    return Response({"detail": "La asignatura y el periodo deben pertenecer a la carrera seleccionada."}, status=400)
+                item = CourseOffering(course=course, period=period, group_code=data.get("groupCode", "").strip(), status=data.get("status", CourseOffering.Status.PLANNED))
+                item.full_clean(); item.save(); action = "admin.offering_created"
+            elif kind == "enrollment":
+                student = StudentProfile.objects.filter(pk=data.get("studentId"), institution_id=career.institution_id).first()
+                period = AcademicPeriod.objects.filter(pk=data.get("periodId"), career=career).first()
+                if not student or not period:
+                    return Response({"detail": "El estudiante y el periodo deben corresponder a la institución y carrera seleccionadas."}, status=400)
+                item = Enrollment(student=student, career=career, period=period, semester_number=data.get("semester", 1),
+                    status=data.get("status", Enrollment.Status.ACTIVE), valid_from=data.get("validFrom") or period.starts_on)
+                item.full_clean(); item.save(); action = "admin.enrollment_created"
+            elif kind == "student":
+                from django.contrib.auth.password_validation import validate_password
+                from apps.accounts.services import grant_role
+                username = data.get("username", "").strip()
+                email = data.get("email", "").strip()
+                password = data.get("password", "")
+                if not username or not email or not data.get("firstName", "").strip() or not data.get("lastName", "").strip():
+                    return Response({"detail": "Completa usuario, correo, nombres y apellidos."}, status=400)
+                account = User(username=username, email=email, first_name=data["firstName"].strip(), last_name=data["lastName"].strip())
+                validate_password(password, user=account)
+                account.set_password(password); account.full_clean(); account.save()
+                item = StudentProfile(institution=career.institution, user=account, student_number=data.get("studentNumber", "").strip())
+                item.full_clean(); item.save()
+                grant_role(actor=request.user, user=account, role=RoleAssignment.Role.STUDENT,
+                           scope=RoleAssignment.Scope.CAREER, career=career, reason="Alta académica en carrera")
+                action = "admin.student_created"
+            elif kind == "grade":
+                from apps.profiles.services import create_grade_record
+                enrollment = Enrollment.objects.filter(pk=data.get("enrollmentId"), career=career).select_related("period").first()
+                offering = CourseOffering.objects.filter(pk=data.get("offeringId"), course__career=career).select_related("course", "period").first()
+                if not enrollment or not offering:
+                    return Response({"detail": "Selecciona matrícula y grupo válidos de la carrera."}, status=400)
+                if enrollment.period_id != offering.period_id:
+                    return Response({"detail": "La matrícula y el grupo deben corresponder al mismo periodo."}, status=400)
+                item = create_grade_record(actor=request.user, enrollment=enrollment, offering=offering,
+                    grade_value=data.get("gradeValue"), source=data.get("source", ""),
+                    source_reference=data.get("sourceReference", ""), reason=data.get("reason", ""))
+                action = None
+            else:
+                return Response({"detail": "Tipo de registro administrativo no reconocido."}, status=400)
+            if action:
+                record_event(actor=request.user, action=action, obj=item, scope_type="career", scope_id=career.pk,
+                             reason=(data.get("reason") or "Registro mediante el panel de administración académica")[:300])
+    except (ValidationError, ValueError, TypeError, AttributeError) as exc:
+        errors = exc.message_dict if hasattr(exc, "message_dict") else {"detail": [str(exc)]}
+        return Response({"errors": {key: [{"message": " ".join(value) if isinstance(value, list) else str(value)}] for key, value in errors.items()}}, status=400)
+    return Response({"id": str(item.pk), "created": True}, status=201)
 
 
 def _notification_payload(item):

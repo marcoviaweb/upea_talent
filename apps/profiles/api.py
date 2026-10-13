@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
 from django.middleware.csrf import get_token
+from django.db.models import Avg, DecimalField, ExpressionWrapper, F, Value
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from rest_framework import serializers, status
@@ -15,6 +16,8 @@ from rest_framework.response import Response
 from apps.accounts.models import RoleAssignment
 from apps.accounts.permissions import current_role_assignments, visible_course_enrollments
 from apps.academics.models import CourseEnrollment, CourseOffering, GradeRecord
+from apps.academics.models import AcademicPeriod, Enrollment
+from apps.activities.models import Activity, PointsMovement
 
 from .forms import StudentProjectForm, StudentSkillForm
 from .models import DevelopmentRecord, StudentProject, StudentSkill
@@ -55,6 +58,17 @@ def _person_name(user):
 
 def _user_payload(user):
     return {"id": str(user.pk), "username": user.get_username(), "name": _person_name(user)}
+
+
+def _auth_audit_scope(user):
+    if not user:
+        return "", ""
+    assignment = current_role_assignments(user).select_related("career", "institution", "group__course__career").first()
+    if not assignment:
+        return "", ""
+    if assignment.scope == "group" and assignment.group_id:
+        return "career", str(assignment.group.course.career_id)
+    return assignment.scope, str(assignment.career_id or assignment.institution_id or "")
 
 
 def _enrollment_payload(enrollment):
@@ -102,8 +116,19 @@ def api_login(request):
     serializer.is_valid(raise_exception=True)
     user = authenticate(request, username=serializer.validated_data["username"], password=serializer.validated_data["password"])
     if user is None or not user.is_active:
+        from apps.audit.models import AuditEvent
+        from apps.accounts.models import User
+        attempted_user = User.objects.filter(username=serializer.validated_data["username"]).first()
+        scope_type, scope_id = _auth_audit_scope(attempted_user)
+        AuditEvent.objects.create(actor=None, action="auth.login_failed", object_type="accounts.user",
+                                  object_id="anonymous", scope_type=scope_type, scope_id=scope_id,
+                                  result="failure", safe_metadata={"username": serializer.validated_data["username"][:150]})
         return Response({"detail": "Usuario o contraseña incorrectos."}, status=status.HTTP_400_BAD_REQUEST)
     login(request, user)
+    from apps.audit.services import record_event
+    scope_type, scope_id = _auth_audit_scope(user)
+    record_event(actor=user, action="auth.login_succeeded", obj=user, scope_type=scope_type, scope_id=scope_id,
+                 reason="Inicio de sesión institucional")
     return Response({"user": _user_payload(user), "csrfToken": get_token(request)})
 
 
@@ -116,6 +141,10 @@ api_login.csrf_exempt = False
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def api_logout(request):
+    from apps.audit.services import record_event
+    scope_type, scope_id = _auth_audit_scope(request.user)
+    record_event(actor=request.user, action="auth.logout", obj=request.user, scope_type=scope_type, scope_id=scope_id,
+                 reason="Cierre de sesión institucional")
     logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -128,7 +157,10 @@ def api_home(request):
     can_manage_career = current_role_assignments(request.user).filter(
         role__in=(RoleAssignment.Role.COORDINATOR, RoleAssignment.Role.CAREER_ADMIN, RoleAssignment.Role.INSTITUTION_ADMIN)
     ).exists() or request.user.is_superuser
-    if not enrollments and not offerings.exists() and not can_manage_career:
+    has_student_access = current_role_assignments(request.user).filter(
+        role=RoleAssignment.Role.STUDENT, scope=RoleAssignment.Scope.CAREER
+    ).exists()
+    if not enrollments and not offerings.exists() and not can_manage_career and not has_student_access:
         raise PermissionDenied("Tu cuenta no tiene una matrícula estudiantil ni grupos docentes vigentes.")
     groups = [{
         "id": str(offering.pk), "course": {"code": offering.course.code, "name": offering.course.name,
@@ -136,9 +168,27 @@ def api_home(request):
         "period": offering.period.name, "group": offering.group_code,
         "studentCount": offering.student_count,
     } for offering in offerings]
+    from django.db.models import Sum
+    visible = student_enrollments(request.user)
+    progress_periods = []
+    for period in AcademicPeriod.objects.filter(pk__in=visible.values("period_id")).distinct().order_by("starts_on"):
+        period_enrollments = visible.filter(period=period)
+        grades = GradeRecord.objects.filter(enrollment__in=period_enrollments, status=GradeRecord.Status.VERIFIED,
+                                            supersedes__isnull=True)
+        average = grades.annotate(normalized=ExpressionWrapper(
+            F("grade_value") * Value(Decimal("100")) / F("scale_snapshot"),
+            output_field=DecimalField(max_digits=8, decimal_places=2),
+        )).aggregate(v=Avg("normalized"))["v"]
+        period_points = PointsMovement.objects.filter(enrollment__in=period_enrollments).aggregate(v=Sum("points"))["v"] or 0
+        progress_periods.append({"label": period.code, "detail": period.name,
+                                 "average": round(float(average), 1) if average is not None else None,
+                                 "points": period_points,
+                                 "evidence": Activity.objects.filter(enrollment__in=period_enrollments).count(),
+                                 "validated": Activity.objects.filter(enrollment__in=period_enrollments, status=Activity.Status.APPROVED).count()})
     return Response({"user": _user_payload(request.user),
                      "enrollments": [_enrollment_payload(enrollment) for enrollment in enrollments],
                      "groups": groups,
+                     "progress": progress_periods,
                      "canRegisterVerifiedActivity": can_manage_career})
 
 

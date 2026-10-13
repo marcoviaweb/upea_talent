@@ -18,3 +18,55 @@
   }
 }
 
+/* Insignias ilustradas de mérito académico. */
+.e06-insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 5px 11px 5px 6px;
+  border: 1px solid var(--insignia-border, #cbd8e2);
+  border-radius: 999px;
+  background: var(--insignia-bg, #edf3f6);
+  color: var(--insignia-fg, #26485f);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+.e06-insignia-image {
+  display: block;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+.e06-insignia-name { color: #26485f; font-size: 12px; font-weight: 750; line-height: 1.25; }
+.e06-insignia.is-compact {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+}
+.e06-insignia.is-compact .e06-insignia-image { width: 112px; height: 112px; }
+.e06-insignia.is-compact .e06-insignia-name { overflow-wrap: anywhere; }
+.e06-insignia-showcase { display: grid; grid-template-columns: minmax(0, 1fr); gap: 13px; min-width: 0; margin-top: 19px; padding: 16px; border: 1px solid #e2e8ee; border-radius: 16px; background: #fff; }
+.e06-insignia-showcase > .e06-levels-heading { display: flex; gap: 14px; padding: 0; border-radius: 0; background: transparent; text-align: left; }
+.e06-insignia-showcase > .e06-levels-grid { display: grid; gap: 8px; padding: 0; border-radius: 0; background: transparent; text-align: initial; }
+.e06-levels-heading { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+.e06-levels-heading h3 { margin: 4px 0 0; color: #172b45; font-size: 16px; }
+.e06-levels-heading p { margin: 0; color: #68768b; font-size: 11px; }
+.e06-levels-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.e06-level-item { display: grid; justify-items: center; gap: 8px; min-width: 0; padding: 12px 6px; border: 1px solid #e7ecf0; border-radius: 12px; background: #fbfcfd; text-align: center; }
+.e06-level-item > strong { color: #52647b; font-size: 11px; font-variant-numeric: tabular-nums; }
+.e06-balance-top > .e06-insignia { margin-left: auto; }
+@media (max-width: 767px) {
+  .e06-levels-heading { align-items: flex-start; flex-direction: column; }
+  .e06-insignia-showcase .e06-levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .e06-level-item:last-child { grid-column: 1 / -1; }
+}
+

@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, BookOpenCheck, BriefcaseBusiness, CalendarDays,
-  Check, CheckCircle2, ChevronDown, CircleHelp, FileBarChart2, GraduationCap, LayoutDashboard,
+  Check, CheckCircle2, ChevronDown, FileBarChart2, GraduationCap, LayoutDashboard,
   Lightbulb, LoaderCircle, LockKeyhole, LogOut, Menu, MessageSquareText, Plus, Search, ShieldCheck, Sparkles, UserRound,
   UsersRound, X, HandHeart,
 } from "lucide-react";
@@ -120,7 +120,7 @@ function AppShell({ home, loading, error, reload, onLogout }: { home: HomeData |
         <NavLink to="/trayectoria/gestion/" className={({ isActive }) => `nav-item ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><FileBarChart2 size={18} />Gestión y análisis</NavLink>
         {home.groups.length > 0 && <div className="nav-section"><span className="sidebar-caption">DOCENCIA</span>{home.groups.slice(0, 4).map((group) => <NavLink key={group.id} to={`/trayectoria/grupo/${group.id}/`} className={({ isActive }) => `nav-item nav-subitem ${isActive ? "nav-active" : ""}`} onClick={() => setMobileNav(false)}><UsersRound size={17} /><span className="nav-truncate">{group.course.code} · {group.group}</span></NavLink>)}</div>}
       </nav>
-      <div className="sidebar-bottom"><div className="help-card"><div className="help-icon"><CircleHelp size={16} /></div><strong>¿Necesitas ayuda?</strong><span>Contacta a tu coordinación académica.</span></div><div className="sidebar-version"><span className="version-dot" /> Portal académico · v1.0</div></div>
+      <div className="sidebar-bottom"><div className="sidebar-version"><span className="version-dot" /> Portal académico · v1.0</div></div>
     </aside>
     {mobileNav && <button className="mobile-scrim" aria-label="Cerrar menú" onClick={() => setMobileNav(false)} />}
     <div className="workspace">
@@ -155,9 +155,11 @@ function Dashboard() {
     <div className="section-title-row"><div><span className="eyebrow">TU HISTORIAL ACADÉMICO</span><h2>Mis matrículas</h2><p>Selecciona un periodo para explorar tu trayectoria.</p></div><span className="record-count"><span>{home.enrollments.length.toString().padStart(2, "0")}</span> periodos</span></div>
     {home.enrollments.length > 3 && <div className="search-row"><Search size={17} /><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Buscar carrera o periodo" aria-label="Buscar carrera o periodo" /></div>}
     {filtered.length ? <div className="enrollment-grid">{filtered.map((enrollment, index) => <EnrollmentCard key={enrollment.id} enrollment={enrollment} index={index} />)}</div> : <EmptyState icon={<BookOpenCheck />} title="No encontramos matrículas" body="Ajusta la búsqueda o consulta con tu coordinación." />}
+    {(home.progress?.length ?? 0) > 0 && <section className="student-progress"><div className="section-title-row compact-title"><div><span className="eyebrow">AVANCE PERSONAL</span><h2>Mi progreso por periodo</h2><p>Promedio verificado, puntos SPD y evidencias registradas en tus matrículas.</p></div></div><div className="student-progress-grid">{home.progress!.map((item)=><article className="student-progress-card" key={item.label}><div><strong>{item.label}</strong><span>{item.detail}</span></div><div className="student-progress-stats"><span><b>{item.average ?? "—"}</b>Promedio / 100</span><span><b>{item.points}</b>Puntos SPD</span><span><b>{item.validated}/{item.evidence}</b>Evidencias validadas</span></div>{item.average !== null && <div className="student-progress-track" role="img" aria-label={`Promedio verificado ${item.average} de 100`}><i style={{width:`${Math.min(100,Math.max(0,item.average))}%`}}/></div>}</article>)}</div></section>}
     {home.groups.length > 0 && <section className="teacher-section"><div className="section-title-row compact-title"><div><span className="eyebrow">ESPACIO DOCENTE</span><h2>Grupos asignados</h2><p>Accede a las trayectorias de los estudiantes de tus grupos.</p></div><span className="record-count"><span>{home.groups.length.toString().padStart(2, "0")}</span> grupos</span></div><div className="group-card-grid">{home.groups.map((group) => <Link key={group.id} className="group-card" to={`/trayectoria/grupo/${group.id}/`}><span className="group-icon"><UsersRound size={19} /></span><span className="group-info"><strong>{group.course.name}</strong><small>{group.course.code} · {group.period} · Grupo {group.group}</small></span><span className="group-students">{group.studentCount}<small>estudiantes</small></span><ArrowRight className="group-arrow" size={17} /></Link>)}</div></section>}
   </div>;
 }
+
 
 function EnrollmentCard({ enrollment, index }: { enrollment: Enrollment; index: number }) {
   return <article className={`enrollment-card card-accent-${index % 3}`}><div className="enrollment-card-top"><span className="career-code">{enrollment.career.code}</span><StatusPill status={enrollment.status} label={enrollment.statusLabel} /></div><span className="period-index">PERIODO {String(enrollment.semester).padStart(2, "0")}</span><h3>{enrollment.career.name}</h3><p className="period-title">{enrollment.period.name}</p><div className="enrollment-card-foot"><span><CalendarDays size={15} /> {dateLabel(enrollment.period.startsOn)}</span><Link className="card-arrow" to={`/trayectoria/matricula/${enrollment.id}/`} aria-label={`Ver trayectoria de ${enrollment.period.name}`}><ArrowUpRight size={19} /></Link></div><div className="card-watermark" aria-hidden="true"><GraduationCap size={91} /></div></article>;

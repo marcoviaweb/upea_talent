@@ -83,6 +83,18 @@ class TrajectoryWorkflowTests(TestCase):
         home = client.get(reverse("profiles:api-home"))
         self.assertEqual(home.status_code, 200)
         self.assertEqual(home.data["user"]["username"], self.student.username)
+        self.assertTrue(AuditEvent.objects.filter(action="auth.login_succeeded", actor=self.student).exists())
+
+    def test_failed_login_is_recorded_without_persisting_a_password(self):
+        client = APIClient(enforce_csrf_checks=True)
+        csrf = client.get(reverse("profiles:api-csrf")).data["csrfToken"]
+        response = client.post(reverse("profiles:api-login"),
+            {"username": self.student.username, "password": "incorrect-password"}, format="json", HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(response.status_code, 400)
+        event = AuditEvent.objects.get(action="auth.login_failed")
+        self.assertIsNone(event.actor_id)
+        self.assertEqual(event.safe_metadata["username"], self.student.username)
+        self.assertNotIn("password", event.safe_metadata)
 
     def test_api_profile_hides_other_students_and_unverified_grades(self):
         client, _ = self.api_session(self.student)

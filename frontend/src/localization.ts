@@ -40,6 +40,17 @@ const auditActions: Record<string, string> = {
   "support.case_discarded": "Caso de acompañamiento descartado",
   "role.granted": "Rol asignado",
   "role.revoked": "Rol retirado",
+  "auth.login_succeeded": "Inicio de sesión correcto",
+  "auth.login_failed": "Intento de acceso fallido",
+  "auth.logout": "Cierre de sesión",
+  "api.operation_failed": "Operación no completada",
+  "admin.period_created": "Periodo académico creado",
+  "admin.course_created": "Asignatura creada",
+  "admin.offering_created": "Grupo académico creado",
+  "admin.enrollment_created": "Matrícula registrada",
+  "admin.student_created": "Estudiante dado de alta",
+  "academics.grade_recorded": "Nota académica registrada",
+  "academics.grade_corrected": "Nota académica rectificada",
 };
 
 const opportunityStatuses: Record<string, string> = {
@@ -71,6 +82,10 @@ const objectTypes: Record<string, string> = {
   "support.supportalert": "Alerta de acompañamiento", "support.supportcase": "Caso de acompañamiento",
   "support.supportaction": "Acción de acompañamiento", "transfers.transferrequest": "Solicitud de transferencia",
   "transfers.transferriskalert": "Alerta de transferencia", "transfers.transferadjustment": "Ajuste de transferencia",
+  "http.request": "Solicitud del sistema", "accounts.user": "Cuenta institucional",
+  "academics.academicperiod": "Periodo académico", "academics.course": "Asignatura",
+  "academics.courseoffering": "Grupo académico", "academics.enrollment": "Matrícula",
+  "academics.studentprofile": "Perfil de estudiante",
 };
 
 const scopes: Record<string, string> = {
@@ -91,6 +106,7 @@ export function auditActionFilterValue(query: string) {
 }
 
 export function auditRoleScopeLabel(value: string) {
+  if (value === "Autenticación") return "Evento de autenticación";
   return value.split(", ").map((assignment) => {
     const [role, scope] = assignment.split(" · ");
     return `${roles[role] ?? "Personal autorizado"} · ${scope ?? "UPEA"}`;

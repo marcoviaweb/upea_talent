@@ -68,6 +68,57 @@ class E11ReportingTests(TestCase):
         self.assertIn("Denominador", response.content.decode("utf-8-sig"))
         self.assertNotIn("e11-out", response.content.decode("utf-8-sig"))
 
+    def test_report_includes_period_and_status_chart_series(self):
+        client = APIClient(); client.force_authenticate(self.coordinator)
+        response = client.get(reverse("reporting:api-report"), {"career": str(self.career.pk)})
+        self.assertEqual(response.status_code, 200)
+        chart = response.data["charts"][0]
+        self.assertEqual(chart["activityByPeriod"][0]["label"], self.period.code)
+        self.assertEqual(chart["pointsDistribution"][0]["label"], "Explorador")
+        self.assertEqual({"evidenceStatuses", "opportunityStatuses", "applicationsByPeriod"} - chart.keys(), set())
+
+    def test_audit_supports_scoped_pages_and_csv_export(self):
+        baseline = AuditEvent.objects.filter(scope_type="career", scope_id=str(self.career.pk)).count()
+        for number in range(28):
+            AuditEvent.objects.create(actor=self.admin, action=f"test.page.{number}", object_type="tests.record",
+                object_id=str(number), scope_type="career", scope_id=str(self.career.pk), reason="Registro")
+        client = APIClient(); client.force_authenticate(self.coordinator)
+        first = client.get(reverse("reporting:api-audit"), {"page": 1, "pageSize": 10})
+        second = client.get(reverse("reporting:api-audit"), {"page": 2, "pageSize": 10})
+        self.assertEqual(first.data["total"], baseline + 28)
+        self.assertEqual(first.data["pages"], (baseline + 28 + 9) // 10)
+        self.assertNotEqual(first.data["events"][0]["id"], second.data["events"][0]["id"])
+        exported = client.get(reverse("reporting:api-audit"), {"export": "csv"})
+        self.assertIn("text/csv", exported["Content-Type"])
+        self.assertIn("test.page.0", exported.content.decode("utf-8-sig"))
+
+    def test_career_manager_can_create_scoped_academic_catalogs(self):
+        client = APIClient(); client.force_authenticate(self.coordinator)
+        response = client.post(reverse("reporting:api-academic-admin"), {
+            "kind": "course", "careerId": str(self.career.pk), "code": "E11-202", "name": "Arquitectura de software", "credits": 5,
+        }, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(AuditEvent.objects.filter(action="admin.course_created", scope_id=str(self.career.pk)).exists())
+        student = APIClient(); student.force_authenticate(self.student)
+        self.assertEqual(student.get(reverse("reporting:api-academic-admin")).status_code, 403)
+
+    def test_academic_admin_can_register_student_and_verified_grade(self):
+        client = APIClient(); client.force_authenticate(self.coordinator)
+        student_response = client.post(reverse("reporting:api-academic-admin"), {
+            "kind": "student", "careerId": str(self.career.pk), "firstName": "Ana", "lastName": "Ejemplo",
+            "username": "e11_new_student", "email": "e11-new-student@example.test", "studentNumber": "E11-003",
+            "password": "Complex-Access-952!",
+        }, format="json")
+        self.assertEqual(student_response.status_code, 201, student_response.data)
+        self.assertTrue(RoleAssignment.objects.filter(user__username="e11_new_student", role=RoleAssignment.Role.STUDENT, career=self.career).exists())
+        offering = CourseOffering.objects.create(course=Course.objects.get(code="E11-101"), period=self.period, group_code="B")
+        grade_response = client.post(reverse("reporting:api-academic-admin"), {
+            "kind": "grade", "careerId": str(self.career.pk), "enrollmentId": str(self.enrollment.pk),
+            "offeringId": str(offering.pk), "gradeValue": "84", "source": "Acta académica verificada", "reason": "Carga de cierre",
+        }, format="json")
+        self.assertEqual(grade_response.status_code, 201, grade_response.data)
+        self.assertTrue(GradeRecord.objects.filter(enrollment=self.enrollment, offering=offering, status=GradeRecord.Status.VERIFIED).exists())
+
     def test_audit_is_read_only_and_only_lists_authorized_career(self):
         AuditEvent.objects.create(actor=self.admin, action="test.read", object_type="tests.record", object_id="1",
             scope_type="career", scope_id=str(self.career.pk), reason="Motivo")
