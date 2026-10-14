@@ -5,6 +5,7 @@ from . import api, views
 app_name = "profiles"
 
 urlpatterns = [
+    path("", views.portal_root, name="portal-root"),
     path("api/v1/csrf/", api.csrf_token, name="api-csrf"),
     path("api/v1/auth/login/", api.api_login, name="api-login"),
     path("api/v1/auth/logout/", api.api_logout, name="api-logout"),

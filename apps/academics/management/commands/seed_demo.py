@@ -127,7 +127,7 @@ class Command(BaseCommand):
             )
             for period in (previous_period, current_period):
                 completed = period == previous_period
-                enrollment, _ = Enrollment.objects.get_or_create(
+                enrollment, _ = Enrollment.objects.update_or_create(
                     student=profile, career=career, period=period,
                     defaults={
                         "semester_number": 1 if completed else 2,
@@ -223,7 +223,7 @@ class Command(BaseCommand):
         # It creates a safe, reproducible example without treating the active term as evidence.
         mateo_user, mateo_profile, _mateo_current, _ = students_by_username["demo.estudiante02"]
         baseline_period = periods["2025-2"]
-        baseline_enrollment, _ = Enrollment.objects.get_or_create(student=mateo_profile, career=career, period=baseline_period,
+        baseline_enrollment, _ = Enrollment.objects.update_or_create(student=mateo_profile, career=career, period=baseline_period,
             defaults={"semester_number": 1, "status": Enrollment.Status.COMPLETED,
                       "valid_from": baseline_period.starts_on, "valid_to": baseline_period.ends_on})
         for index, (code, _name, _credits) in enumerate(courses):
@@ -297,6 +297,18 @@ class Command(BaseCommand):
             review_transfer(
                 actor=actor, request_id=sample_request.pk, decision="approve",
                 reason="Aporte confirmado por la coordinación del proyecto.",
+            )
+        teacher_transfer_key = "DEMO-E08-MATEO-ANDREA-PENDING"
+        if not TransferRequest.objects.filter(sender=transfer_enrollment, idempotency_key=teacher_transfer_key).exists():
+            mateo_activity = Activity.objects.get(
+                enrollment=transfer_enrollment, title="Mentoría entre pares para prueba E08",
+            )
+            create_transfer_request(
+                actor=transfer_sender, sender_id=transfer_enrollment.pk,
+                recipient_id=students_by_username["demo.estudiante01"][2].pk,
+                activity_id=mateo_activity.pk, amount=2,
+                reason="Colaboración en la preparación del prototipo y acompañamiento de laboratorio.",
+                idempotency_key=teacher_transfer_key,
             )
         for index, (category_code, title) in enumerate((
             ("research", "Colaboración en investigación de datos urbanos"),
@@ -647,6 +659,7 @@ class Command(BaseCommand):
 
     def _seed_support(self, actor, career, periods, courses):
         coordinator = User.objects.get(username="demo.coordinador01")
+        teacher = User.objects.get(username="demo.docente01")
         rule, _ = SupportRuleVersion.objects.get_or_create(career=career,
             indicator=SupportRuleVersion.Indicator.VERIFIED_AVERAGE_DECLINE, version=1,
             defaults={"valid_from": periods["2026-1"], "threshold_points": Decimal("10"),
@@ -658,12 +671,16 @@ class Command(BaseCommand):
             rule.save(update_fields=("active",))
         evaluate_active_rules(actor=coordinator, career=career)
         alert = SupportAlert.objects.filter(rule=rule, enrollment__student__student_number="SIS-2026-002").first()
-        if alert:
-            case, created_case = SupportCase.objects.get_or_create(alert=alert,
-                defaults={"assigned_to": coordinator, "created_by": coordinator})
-            if created_case:
-                alert.status = SupportAlert.Status.CASE_OPEN
-                alert.save(update_fields=("status",))
-                SupportAction.objects.create(case=case, kind=SupportAction.Kind.ADVISING,
-                    description="Reunión inicial para conversar sobre estrategias de estudio y acordar un plan de refuerzo en Programación.",
-                    due_date=timezone.localdate() + timedelta(days=7), status="planned", recorded_by=coordinator)
+        if not alert:
+            raise CommandError("No se pudo generar la señal de acompañamiento para Mateo con los periodos y notas verificadas de demostración.")
+        case, created_case = SupportCase.objects.get_or_create(alert=alert,
+            defaults={"assigned_to": teacher, "created_by": coordinator})
+        if case.assigned_to_id != teacher.pk:
+            case.assigned_to = teacher
+            case.save(update_fields=("assigned_to",))
+        if created_case:
+            alert.status = SupportAlert.Status.CASE_OPEN
+            alert.save(update_fields=("status",))
+            SupportAction.objects.create(case=case, kind=SupportAction.Kind.ADVISING,
+                description="Reunión inicial para conversar sobre estrategias de estudio y acordar un plan de refuerzo en Programación.",
+                due_date=timezone.localdate() + timedelta(days=7), status="planned", recorded_by=teacher)

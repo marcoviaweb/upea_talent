@@ -1,4 +1,5 @@
 from decimal import Decimal
+import socket
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -29,7 +30,22 @@ RECORD_FORMS = {"project": StudentProjectForm, "skill": StudentSkillForm}
 
 
 def frontend_app(request, *args, **kwargs):
-    return render(request, "profiles/spa.html", {"frontend_dev_server": settings.FRONTEND_DEV_SERVER})
+    return render(request, "profiles/spa.html", {
+        "frontend_dev_server": settings.FRONTEND_DEV_SERVER and frontend_dev_server_available(),
+    })
+
+
+def frontend_dev_server_available():
+    """Use Vite only when it is running; otherwise serve the latest built assets."""
+    try:
+        with socket.create_connection(("127.0.0.1", 5173), timeout=0.25):
+            return True
+    except OSError:
+        return False
+
+
+def portal_root(request):
+    return redirect("profiles:login")
 
 
 def assigned_teacher_offerings(user):

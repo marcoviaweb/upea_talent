@@ -1,13 +1,15 @@
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.accounts.permissions import current_role_assignments
-from apps.academics.models import AcademicPeriod, Career, Enrollment
+from apps.accounts.models import RoleAssignment
+from apps.accounts.permissions import current_role_assignments, visible_course_enrollments
+from apps.academics.models import AcademicPeriod, Career, Enrollment, TeachingAssignment
 from apps.activities.services import can_manage_spd
 from apps.audit.services import record_event
 from .models import SupportAction, SupportAlert, SupportCase, SupportRuleVersion
@@ -35,6 +37,20 @@ class ActionInput(serializers.Serializer):
 
 def _manager(user, career):
     return can_manage_spd(user, career)
+
+
+def _can_receive_case_assignment(user, career):
+    if _manager(user, career):
+        return True
+    today = timezone.localdate()
+    assigned_groups = TeachingAssignment.objects.filter(
+        user=user, role=TeachingAssignment.AssignmentRole.TEACHER, active=True,
+        offering__course__career=career, starts_on__lte=today,
+    ).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today)).values("offering_id")
+    return current_role_assignments(user).filter(
+        role=RoleAssignment.Role.TEACHER, scope=RoleAssignment.Scope.GROUP,
+        group_id__in=assigned_groups,
+    ).exists()
 
 
 def _rule_card(rule):
@@ -99,11 +115,21 @@ def api_support(request):
 
     managed_ids = list(careers.values_list("id", flat=True))
     rules = SupportRuleVersion.objects.filter(career_id__in=managed_ids).select_related("career", "valid_from")
+    group_rows = list(visible_course_enrollments(user).values_list(
+        "enrollment__student_id", "offering__course__career_id",
+    ))
+    group_pairs = set(group_rows)
     if user.is_superuser:
         alerts = SupportAlert.objects.all()
     else:
-        # Managers only see their career cases; assigned coordinators see the cases explicitly entrusted to them.
+        # Managers see their career; delegated staff see their cases; teachers can
+        # discover signals only for students currently enrolled in their own groups.
         alerts = SupportAlert.objects.filter(enrollment__career_id__in=managed_ids) | SupportAlert.objects.filter(support_case__assigned_to=user)
+        if group_rows:
+            alerts |= SupportAlert.objects.filter(
+                enrollment__student_id__in={student_id for student_id, _career_id in group_rows},
+                enrollment__career_id__in={career_id for _student_id, career_id in group_rows},
+            )
     own_enrollments = Enrollment.objects.filter(student__user=user).select_related("career", "period")
     if own_enrollments.exists():
         alerts = alerts | SupportAlert.objects.filter(enrollment__student__user=user)
@@ -113,8 +139,12 @@ def api_support(request):
         manager = _manager(user, alert.enrollment.career)
         assigned = getattr(getattr(alert, "support_case", None), "assigned_to_id", None) == user.pk
         own = alert.enrollment.student.user_id == user.pk
-        if manager or assigned or own:
-            visible_alerts.append(_alert_card(alert, manager=manager or assigned))
+        group_teacher = (alert.enrollment.student_id, alert.enrollment.career_id) in group_pairs
+        if manager or assigned or own or group_teacher:
+            payload = _alert_card(alert, manager=manager or assigned)
+            if not (manager or assigned or own):
+                payload["case"] = None
+            visible_alerts.append(payload | {"isAssigned": assigned, "isGroupTeacher": group_teacher})
     own_metrics = []
     for enrollment in own_enrollments:
         own_metrics.append(period_indicators(enrollment))
@@ -164,8 +194,8 @@ def api_create_case(request):
         return Response({"detail": "Solo se puede abrir un caso desde una alerta pendiente de revisión."}, status=409)
     assignee_id = data.validated_data.get("assignedToId") or request.user.pk
     assignee = request.user.__class__.objects.filter(pk=assignee_id, is_active=True).first()
-    if not assignee or not _manager(assignee, alert.enrollment.career):
-        return Response({"detail": "El responsable debe ser coordinación activa de la misma carrera."}, status=400)
+    if not assignee or not _can_receive_case_assignment(assignee, alert.enrollment.career):
+        return Response({"detail": "El responsable debe ser coordinación o docencia activa en un grupo de la misma carrera."}, status=400)
     case = SupportCase.objects.create(alert=alert, assigned_to=assignee, created_by=request.user)
     alert.status = SupportAlert.Status.CASE_OPEN
     alert.save(update_fields=("status",))

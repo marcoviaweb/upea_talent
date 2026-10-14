@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import RoleAssignment, User
 from apps.accounts.services import grant_role
-from apps.academics.models import AcademicPeriod, Career, Course, CourseOffering, Enrollment, GradeRecord, Institution, StudentProfile
+from apps.academics.models import AcademicPeriod, Career, Course, CourseEnrollment, CourseOffering, Enrollment, GradeRecord, Institution, StudentProfile, TeachingAssignment
 from .models import SupportAlert, SupportCase, SupportRuleVersion
 from .services import evaluate_active_rules
 
@@ -82,6 +82,55 @@ class E10SupportTests(TestCase):
         denied = client.post(reverse("support:api-support-case-action", args=[case.pk]),
             {"kind": "student_response", "description": "Solicito hablar con coordinación.", "status": "completed"}, format="json")
         self.assertEqual(denied.status_code, 403)
+
+    def test_assigned_teacher_can_view_and_update_only_the_delegated_case(self):
+        alert = evaluate_active_rules(actor=self.coordinator, career=self.career)[0]
+        teacher = User.objects.create_user(username="e10_teacher", email="teacher-e10@example.test", password="test-pass-123")
+        offering = CourseOffering.objects.create(course=self.courses[0], period=self.periods[1], group_code="A")
+        grant_role(actor=self.admin, user=teacher, role=RoleAssignment.Role.TEACHER,
+            scope=RoleAssignment.Scope.GROUP, group=offering, reason="Docencia del grupo E10")
+        TeachingAssignment.objects.create(user=teacher, offering=offering,
+            role=TeachingAssignment.AssignmentRole.TEACHER, starts_on=timezone.localdate() - timedelta(days=1))
+        coordinator = APIClient(); coordinator.force_authenticate(self.coordinator)
+        created = coordinator.post(reverse("support:api-support-create-case"), {
+            "alertId": str(alert.pk), "assignedToId": teacher.pk,
+        }, format="json")
+        self.assertEqual(created.status_code, 201, created.data)
+        case_id = created.data["id"]
+        client = APIClient(); client.force_authenticate(teacher)
+        response = client.get(reverse("support:api-support"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["id"] for item in response.data["alerts"]], [str(alert.pk)])
+        self.assertTrue(response.data["alerts"][0]["isAssigned"])
+        action = client.post(reverse("support:api-support-case-action", args=[case_id]), {
+            "kind": "advising", "description": "Revisión del plan de estudio acordado para el periodo.", "status": "planned",
+        }, format="json")
+        self.assertEqual(action.status_code, 201)
+
+    def test_teacher_sees_historical_alerts_for_students_in_current_assigned_groups(self):
+        alert = evaluate_active_rules(actor=self.coordinator, career=self.career)[0]
+        SupportCase.objects.create(alert=alert, assigned_to=self.coordinator, created_by=self.coordinator)
+        teacher = User.objects.create_user(username="e10_group_teacher", email="group-teacher-e10@example.test", password="test-pass-123")
+        today = timezone.localdate()
+        current_period = AcademicPeriod.objects.create(career=self.career, code="E10-CURRENT", name="Periodo actual",
+            starts_on=today - timedelta(days=10), ends_on=today + timedelta(days=80), status=AcademicPeriod.Status.OPEN)
+        current_offering = CourseOffering.objects.create(course=self.courses[0], period=current_period, group_code="B")
+        current_enrollment = Enrollment.objects.create(student=self.enrollments[1].student, career=self.career,
+            period=current_period, valid_from=current_period.starts_on, status=Enrollment.Status.ACTIVE)
+        CourseEnrollment.objects.create(enrollment=current_enrollment, offering=current_offering, active=True)
+        grant_role(actor=self.admin, user=teacher, role=RoleAssignment.Role.TEACHER,
+            scope=RoleAssignment.Scope.GROUP, group=current_offering, reason="Docencia del grupo actual E10")
+        TeachingAssignment.objects.create(user=teacher, offering=current_offering,
+            role=TeachingAssignment.AssignmentRole.TEACHER, starts_on=today - timedelta(days=1))
+
+        client = APIClient(); client.force_authenticate(teacher)
+        response = client.get(reverse("support:api-support"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["id"] for item in response.data["alerts"]], [str(alert.pk)])
+        self.assertTrue(response.data["alerts"][0]["isGroupTeacher"])
+        self.assertFalse(response.data["alerts"][0]["isAssigned"])
+        self.assertIsNone(response.data["alerts"][0]["case"])
 
     def test_incomplete_open_period_does_not_make_comparison(self):
         self.periods[1].status = AcademicPeriod.Status.OPEN

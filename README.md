@@ -91,19 +91,19 @@ Primero crea una cuenta técnica para el panel. Django te pedirá nombre de usua
 
 Después de crearla, ejecuta `manage.py seed_demo` para preparar las cuentas, trayectorias, oportunidades y casos de cada módulo. Para probar el recorrido del jurado, asigna claves locales a `demo.estudiante05`, `demo.docente01` y `demo.coordinador01` con `manage.py changepassword <usuario>`; las cuentas conservan permisos distintos por rol.
 
-Inicia el frontend y el backend en **dos ventanas de PowerShell**. En la primera ejecuta Django:
+Inicia Django en una ventana de PowerShell:
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
 ```
 
-En la segunda ejecuta Vite para servir React y actualizar la interfaz al guardar cambios:
+Para trabajar con recarga automática de la interfaz, inicia Vite en una segunda ventana:
 
 ```powershell
 npm run dev
 ```
 
-Abre `http://127.0.0.1:5173/acceso/`. Vite sirve la interfaz y reenvía `/api/` a Django; las cookies de sesión y el token CSRF mantienen protegidas las operaciones. El panel de administración y los endpoints de salud permanecen en el puerto `8000`. Si Vite no está iniciado, la interfaz de desarrollo no cargará. Para verificar el paquete que se usará en una instalación compilada, genera los estáticos con:
+Con Vite activo, abre `http://127.0.0.1:5173/acceso/`; Vite sirve la interfaz y reenvía `/api/` a Django. Sin Vite, abre `http://127.0.0.1:8000/` o `http://127.0.0.1:8000/acceso/`: la raíz lleva al login y Django sirve el frontend compilado más reciente. Las cookies de sesión y el token CSRF mantienen protegidas las operaciones. El panel de administración y los endpoints de salud permanecen en el puerto `8000`. Para actualizar el paquete compilado, genera los estáticos con:
 
 ```powershell
 npm run typecheck
@@ -148,7 +148,7 @@ Con PostgreSQL iniciado, ejecuta desde la raíz del proyecto:
 
 Las pruebas cubren los módulos entregados, incluida elegibilidad, postulaciones, límites de E08, privacidad, habilitación, umbral de cinco y agregación anónima de E09. `npm run typecheck` y `npm run build` comprueban el frontend. Consulta [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md) para los recorridos.
 
-El comando `seed_demo` prepara el entorno local de Ingeniería de Sistemas. Es idempotente y no establece contraseñas. Con una cuenta técnica activa crea cinco estudiantes, una docente, coordinación, cursos, trayectorias y reglamento SPD. Valeria Quispe queda con 90 puntos propios, notas verificadas, proyecto validado y una declaración adjunta pendiente de revisión; al aprobarla, suma 10 puntos y cruza al nivel Participante. También se prepara una beca en borrador con criterios de elegibilidad, una campaña E09 abierta para pruebas y un agregado de evaluación ya publicado que respeta el mínimo de cinco respuestas. La declaración de apoyo del recorrido está en [output/pdf/constancia_curso_investigacion.pdf](output/pdf/constancia_curso_investigacion.pdf). Guías de módulos: [E04_IDENTIDAD_ACADEMIA.md](E04_IDENTIDAD_ACADEMIA.md), [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md).
+El comando `seed_demo` prepara el entorno local de Ingeniería de Sistemas. Es idempotente y no establece contraseñas. Con una cuenta técnica activa crea cinco estudiantes, una docente, coordinación, cursos, trayectorias y reglamento SPD. `demo.docente01` queda asignada a los grupos activos y tiene una evidencia pendiente y una transferencia para revisar, resultados de evaluación académica, una convocatoria publicada para consulta, un caso de acompañamiento asignado y gráficos estadísticos agregados sobre los grupos autorizados. Puede registrar acciones en los casos que le fueron confiados; la administración de carrera y la bitácora continúan restringidas a coordinación. Valeria Quispe queda con 90 puntos propios, notas verificadas, proyecto validado y una declaración adjunta pendiente de revisión; al aprobarla, suma 10 puntos y cruza al nivel Participante. También se prepara una beca en borrador con criterios de elegibilidad, una campaña E09 abierta para pruebas y un agregado de evaluación ya publicado que respeta el mínimo de cinco respuestas. La declaración de apoyo del recorrido está en [output/pdf/constancia_curso_investigacion.pdf](output/pdf/constancia_curso_investigacion.pdf). Guías de módulos: [E04_IDENTIDAD_ACADEMIA.md](E04_IDENTIDAD_ACADEMIA.md), [E05_TRAYECTORIA.md](E05_TRAYECTORIA.md), [E06_EVIDENCIAS_SPD.md](E06_EVIDENCIAS_SPD.md), [E07_OPORTUNIDADES.md](E07_OPORTUNIDADES.md), [E08_TRANSFERENCIAS.md](E08_TRANSFERENCIAS.md) y [E09_EVALUACIONES.md](E09_EVALUACIONES.md).
 
 Para el plan de preparación y ensayo del recorrido completo de feria, consulta [PLAN_FLUJO_JURADO.md](PLAN_FLUJO_JURADO.md).
 

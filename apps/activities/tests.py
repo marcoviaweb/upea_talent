@@ -54,6 +54,23 @@ class E06EvidenceAndPointsTests(TestCase):
     def submit(self, title="Certificación de prueba"):
         return submit_activity(user=self.student, enrollment=self.enrollment, category=self.category, title=title, description="Actividad ficticia verificable", occurred_on=timezone.localdate(), source="Entidad de demostración", uploaded_file=self.upload(), course_enrollment=self.roster)
 
+    def test_teacher_spd_view_lists_movements_for_assigned_students(self):
+        PointsMovement.objects.create(
+            enrollment=self.enrollment, regulation=self.regulation, category=self.category,
+            actor=self.admin, points=10, reason="Actividad validada",
+        )
+        client = APIClient()
+        client.force_authenticate(self.teacher)
+
+        response = client.get(reverse("api-spd"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["groupView"])
+        self.assertEqual(len(response.data["totals"]), 1)
+        self.assertEqual(response.data["totals"][0]["student"], self.student.get_full_name() or self.student.username)
+        self.assertEqual(response.data["totals"][0]["points"], 10)
+        self.assertEqual(len(response.data["totals"][0]["movements"]), 1)
+
     def test_approval_awards_exactly_once_and_reversal_is_compensating(self):
         activity = self.submit()
         review_activity(actor=self.teacher, activity=activity, outcome="approve", note="Certificado verificado.")

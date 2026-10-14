@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.db import transaction
 from django.test import TestCase
@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import RoleAssignment, User
 from apps.accounts.services import grant_role
-from apps.academics.models import AcademicPeriod, Career, Course, CourseOffering, Enrollment, GradeRecord, Institution, StudentProfile
+from apps.academics.models import AcademicPeriod, Career, Course, CourseEnrollment, CourseOffering, Enrollment, GradeRecord, Institution, StudentProfile, TeachingAssignment
 from apps.audit.models import AuditEvent
 from .models import Notification
 
@@ -32,9 +32,15 @@ class E11ReportingTests(TestCase):
         profile = StudentProfile.objects.create(user=cls.student, institution=cls.institution, student_number="E11-001")
         cls.enrollment = Enrollment.objects.create(student=profile, career=cls.career, period=cls.period, valid_from=cls.period.starts_on)
         course = Course.objects.create(career=cls.career, code="E11-101", name="Sistemas de información")
-        offering = CourseOffering.objects.create(course=course, period=cls.period, group_code="A")
-        GradeRecord.objects.create(enrollment=cls.enrollment, offering=offering, grade_value=90, scale_snapshot=120,
+        cls.offering = CourseOffering.objects.create(course=course, period=cls.period, group_code="A")
+        CourseEnrollment.objects.create(enrollment=cls.enrollment, offering=cls.offering)
+        GradeRecord.objects.create(enrollment=cls.enrollment, offering=cls.offering, grade_value=90, scale_snapshot=120,
             status=GradeRecord.Status.VERIFIED, recorded_by=cls.admin, verified_by=cls.admin, verified_at=timezone.now())
+        cls.teacher = User.objects.create_user(username="e11_teacher", first_name="Docente", email="e11-teacher@example.test", password="test-pass-123")
+        grant_role(actor=cls.admin, user=cls.teacher, role=RoleAssignment.Role.TEACHER,
+            scope=RoleAssignment.Scope.GROUP, group=cls.offering, reason="Docencia del grupo SIS")
+        TeachingAssignment.objects.create(user=cls.teacher, offering=cls.offering,
+            role=TeachingAssignment.AssignmentRole.TEACHER, starts_on=today - timedelta(days=1))
         cls.outsider = User.objects.create_user(username="e11_out", email="e11-out@example.test", password="test-pass-123")
         other_profile = StudentProfile.objects.create(user=cls.outsider, institution=cls.institution, student_number="E11-002")
         Enrollment.objects.create(student=other_profile, career=cls.career, period=cls.period, valid_from=cls.period.starts_on)
@@ -58,6 +64,17 @@ class E11ReportingTests(TestCase):
         active = next(row for row in response.data["rows"] if row["metric"] == "Mis matrículas activas")
         self.assertEqual(active["value"], 1)
         self.assertEqual(client.get(reverse("reporting:api-report"), {"career": str(self.career.pk)}).status_code, 404)
+        self.assertEqual(client.get(reverse("reporting:api-audit")).status_code, 403)
+
+    def test_teacher_sees_aggregate_report_only_for_assigned_groups(self):
+        client = APIClient(); client.force_authenticate(self.teacher)
+        response = client.get(reverse("reporting:api-report"))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data["canManage"])
+        self.assertTrue(response.data["groupView"])
+        self.assertEqual({row["careerCode"] for row in response.data["rows"]}, {"SIS"})
+        average = next(row["value"] for row in response.data["rows"] if row["metric"] == "Promedio verificado / 100")
+        self.assertEqual(average, 75.0)
         self.assertEqual(client.get(reverse("reporting:api-audit")).status_code, 403)
 
     def test_csv_uses_same_authorized_scope_and_exposes_definitions(self):

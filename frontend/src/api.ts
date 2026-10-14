@@ -23,7 +23,7 @@ export type Profile = {
   projects: DevelopmentRecord[]; skills: DevelopmentRecord[];
   counts: { validatedProjects: number; validatedSkills: number };
 };
-export type HomeData = { user: User; enrollments: Enrollment[]; canRegisterVerifiedActivity?: boolean; progress?: Array<{label:string;detail:string;average:number|null;points:number;evidence:number;validated:number}>; groups: Array<{
+export type HomeData = { user: User; enrollments: Enrollment[]; canRegisterVerifiedActivity?: boolean; progress?: Array<{label:string;detail:string;average:number|null;points:number;evidence:number;validated:number;evidenceInReview:number;evidenceObserved:number;evidenceRejected:number;evidenceRevoked:number}>; groups: Array<{
   id: string; course: { code: string; name: string; career: string }; period: string; group: string; studentCount: number;
 }> };
 

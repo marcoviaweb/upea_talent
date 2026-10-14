@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import RoleAssignment, User
 from apps.accounts.services import grant_role
-from apps.academics.models import AcademicPeriod, Career, Course, CourseOffering, Enrollment, GradeRecord, Institution, StudentProfile
+from apps.academics.models import AcademicPeriod, Career, Course, CourseEnrollment, CourseOffering, Enrollment, GradeRecord, Institution, StudentProfile, TeachingAssignment
 from apps.activities.models import Activity, ActivityCategory, PointsMovement, Regulation
 from apps.profiles.models import DevelopmentRecord, StudentProject
 from .models import Application, ApplicationDecision, Opportunity, OpportunityRequirement, OpportunityVersion
@@ -150,6 +150,21 @@ class E07OpportunityTests(TestCase):
         self.assertEqual(listing.json()["opportunities"], [])
         apply = client.post(reverse("opportunities:apply", args=(self.version.pk,)), {"enrollmentId": str(self.enrollment.pk)}, format="json")
         self.assertEqual(apply.status_code, 404)
+
+    def test_teacher_can_discover_career_calls_without_student_application_rights(self):
+        teacher = User.objects.create_user(username="e07_teacher", email="teacher-e07@example.test", password="test-pass-123")
+        grant_role(actor=self.admin, user=teacher, role=RoleAssignment.Role.TEACHER,
+            scope=RoleAssignment.Scope.GROUP, group=self.offering, reason="Docencia del grupo E07")
+        TeachingAssignment.objects.create(user=teacher, offering=self.offering,
+            role=TeachingAssignment.AssignmentRole.TEACHER, starts_on=timezone.localdate() - timedelta(days=1))
+        CourseEnrollment.objects.create(enrollment=self.enrollment, offering=self.offering)
+        client = APIClient(); client.force_authenticate(teacher)
+        listing = client.get(reverse("opportunities:list"))
+        self.assertEqual(listing.status_code, 200)
+        payload = listing.json()
+        self.assertIn(str(self.version.pk), {row["versionId"] for row in payload["opportunities"]})
+        self.assertEqual(payload["enrollments"], [])
+        self.assertEqual(payload["careers"], [])
 
     def test_coordinator_scope_and_capacity_are_enforced(self):
         self.make_eligible()

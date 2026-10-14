@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.accounts.models import RoleAssignment, User
-from apps.accounts.permissions import current_role_assignments
+from apps.accounts.permissions import current_role_assignments, visible_course_enrollments
 from apps.academics.models import AcademicPeriod, Career, Course, CourseEnrollment, CourseOffering, Enrollment, GradeRecord, StudentProfile
 from apps.activities.models import Activity, PointsMovement
 from apps.audit.models import AuditEvent
@@ -145,6 +145,76 @@ def _report_charts(career, period=None):
     }
 
 
+def _teacher_group_report(user):
+    """Aggregate only the active rosters attached to groups visible to this teacher."""
+    roster = visible_course_enrollments(user).select_related(
+        "enrollment__career", "enrollment__period", "offering__course", "offering__period",
+    ).distinct()
+    if not roster.exists():
+        return None
+    enrollment_ids = roster.values("enrollment_id").distinct()
+    offering_ids = roster.values("offering_id").distinct()
+    enrollments = Enrollment.objects.filter(pk__in=enrollment_ids)
+    offerings = CourseOffering.objects.filter(pk__in=offering_ids).distinct()
+    periods = list(AcademicPeriod.objects.filter(pk__in=offerings.values("period_id")).distinct().order_by("starts_on"))
+    activities = Activity.objects.filter(enrollment_id__in=enrollment_ids)
+    grades = GradeRecord.objects.filter(enrollment_id__in=enrollment_ids, status=GradeRecord.Status.VERIFIED, supersedes__isnull=True)
+    points = PointsMovement.objects.filter(enrollment_id__in=enrollment_ids)
+    applications = Application.objects.filter(enrollment_id__in=enrollment_ids)
+    transfers = TransferRequest.objects.filter(sender_id__in=enrollment_ids)
+    cases = SupportCase.objects.filter(assigned_to=user, alert__enrollment_id__in=enrollment_ids)
+    average = grades.annotate(normalized=ExpressionWrapper(
+        F("grade_value") * Value(Decimal("100")) / F("scale_snapshot"),
+        output_field=DecimalField(max_digits=8, decimal_places=2),
+    )).aggregate(value=Avg("normalized"))["value"]
+
+    rows = [
+        ("Grupos asignados", offerings.count(), "Grupos activos visibles para esta cuenta docente", offerings.count()),
+        ("Matrículas activas en grupos", enrollments.count(), "Matrículas únicas activas en los grupos asignados", enrollments.count()),
+        ("Notas verificadas", grades.count(), "Notas vigentes verificadas en las matrículas visibles", grades.count()),
+        ("Promedio verificado / 100", round(float(average), 2) if average is not None else "—", "Promedio de notas visibles normalizadas a escala 100", grades.count()),
+        ("Evidencias aprobadas", activities.filter(status=Activity.Status.APPROVED).count(), "Evidencias aprobadas de matrículas visibles", activities.count()),
+        ("Evidencias por revisar", activities.filter(status__in=(Activity.Status.IN_REVIEW, Activity.Status.OBSERVED)).count(), "Evidencias en revisión u observadas dentro del alcance docente", activities.count()),
+        ("Puntos SPD", points.aggregate(value=Sum("points"))["value"] or 0, "Puntos acumulados en las matrículas visibles", points.count()),
+        ("Postulaciones de estudiantes", applications.count(), "Postulaciones de matrículas presentes en grupos asignados", applications.count()),
+        ("Transferencias pendientes", transfers.filter(status__in=(TransferRequest.Status.IN_REVIEW, TransferRequest.Status.FLAGGED)).count(), "Solicitudes enviadas por matrículas visibles que requieren revisión", transfers.count()),
+        ("Casos asignados", cases.count(), "Casos de acompañamiento confiados a esta cuenta docente y dentro de sus grupos", cases.count()),
+    ]
+    career = roster.first().offering.course.career
+    balance_rows = enrollments.values("pk").annotate(total=Sum("spd_movements__points"))
+    levels = ((0, 99, "Explorador"), (100, 249, "Participante"), (250, 499, "Desarrollador"),
+              (500, 749, "Líder"), (750, None, "Talento destacado"))
+    level_totals = [0] * len(levels)
+    for row in balance_rows:
+        score = row["total"] or 0
+        for index, (lower, upper, _label) in enumerate(levels):
+            if score >= lower and (upper is None or score <= upper):
+                level_totals[index] += 1
+                break
+    charts = [{
+        "career": career.name, "careerCode": career.code,
+        "activityByPeriod": [{"label": period.code, "detail": period.name,
+                              "value": activities.filter(enrollment__period=period).count()} for period in periods],
+        "pointsDistribution": [{"label": level[2], "value": level_totals[index]} for index, level in enumerate(levels)],
+        "evidenceStatuses": [{"label": label, "value": activities.filter(status=value).count()}
+                             for value, label in Activity.Status.choices],
+        "opportunityStatuses": [{"label": label, "value": applications.filter(status=value).count()}
+                                for value, label in Application.Status.choices],
+        "applicationsByPeriod": [{"label": period.code, "detail": period.name,
+                                  "value": applications.filter(enrollment__period=period).count()} for period in periods],
+    }]
+    return {
+        "canManage": False, "groupView": True, "personalView": False, "careers": [], "periods": [],
+        "selectedPeriod": "", "rows": [{"career": career.name, "careerCode": career.code,
+                                           "metric": name, "value": value, "definition": definition,
+                                           "denominator": denominator}
+                                          for name, value, definition, denominator in rows],
+        "charts": charts,
+        "source": "Datos agregados de matrículas en tus grupos asignados, notas verificadas, evidencias, SPD, postulaciones, transferencias y casos confiados a tu cuenta.",
+        "extractedAt": timezone.localtime().isoformat(timespec="seconds"),
+    }
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_report(request):
@@ -166,6 +236,9 @@ def api_report(request):
             return Response({"canManage": False, "personalView": True, "careers": [], "periods": [], "rows": personal_rows,
                              "source": "Tus propias matrículas, notas verificadas, evidencias, movimientos SPD, postulaciones, transferencias y acompañamiento.",
                              "extractedAt": timezone.localtime().isoformat(timespec="seconds")})
+        group_report = _teacher_group_report(request.user)
+        if group_report:
+            return Response(group_report)
         return Response({"canManage": False, "personalView": False, "careers": [], "periods": [], "rows": [],
                          "message": "Tu rol no tiene acceso a informes de carrera."})
     period_id = request.query_params.get("period")

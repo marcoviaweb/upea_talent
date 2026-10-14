@@ -166,7 +166,20 @@ def api_record_verified(request):
 @permission_classes([IsAuthenticated])
 def api_spd(request):
     own_enrollments = Enrollment.objects.filter(student__user=request.user).select_related("career")
+    group_view = not own_enrollments.exists()
+    visible_roster = visible_course_enrollments(request.user).select_related(
+        "enrollment__student__user", "enrollment__career", "enrollment__period",
+        "offering__course",
+    )
+    if group_view:
+        ledger_enrollments = Enrollment.objects.filter(
+            pk__in=visible_roster.values("enrollment_id"), status="active"
+        ).select_related("student__user", "career", "period").distinct()
+    else:
+        ledger_enrollments = own_enrollments.select_related("student__user", "period")
     careers = {str(enrollment.career_id): enrollment.career for enrollment in own_enrollments}
+    if group_view:
+        careers.update({str(enrollment.career_id): enrollment.career for enrollment in ledger_enrollments})
     published = Regulation.objects.filter(published=True, effective_from__lte=timezone.localdate()).filter(
         Q(effective_to__isnull=True) | Q(effective_to__gte=timezone.localdate())
     ).select_related("career")
@@ -181,12 +194,15 @@ def api_spd(request):
         if regulation:
             regulations.append({"id": str(regulation.pk), "career": career.name, "careerCode": career.code, "version": regulation.version, "title": regulation.title, "effectiveFrom": regulation.effective_from.isoformat(), "effectiveTo": regulation.effective_to.isoformat() if regulation.effective_to else None, "categories": [{"id": str(row.pk), "code": row.code, "name": row.name, "criterion": row.criterion, "points": row.points, "transferable": row.transferable} for row in regulation.categories.filter(active=True)]})
     for career in careers.values():
-        for enrollment in own_enrollments.filter(career=career):
+        for enrollment in ledger_enrollments.filter(career=career):
             movements = PointsMovement.objects.filter(enrollment=enrollment)
             total = sum(movements.values_list("points", flat=True))
             level = "Explorador" if total < 100 else "Participante" if total < 250 else "Desarrollador" if total < 500 else "Líder" if total < 750 else "Talento destacado"
-            totals.append({"enrollment": str(enrollment.pk), "career": career.name, "period": enrollment.period.name, "points": total, "level": level, "movements": [{"id": str(movement.pk), "points": movement.points, "reason": movement.reason, "category": movement.category.name, "regulationVersion": movement.regulation.version, "date": movement.created_at.isoformat(), "activity": str(movement.activity_id) if movement.activity_id else None} for movement in movements.select_related("category", "regulation")]})
-    return Response({"regulations": regulations, "totals": totals, "levelThresholds": [{"name": "Explorador", "from": 0, "to": 99}, {"name": "Participante", "from": 100, "to": 249}, {"name": "Desarrollador", "from": 250, "to": 499}, {"name": "Líder", "from": 500, "to": 749}, {"name": "Talento destacado", "from": 750, "to": None}]})
+            row = {"enrollment": str(enrollment.pk), "career": career.name, "careerCode": career.code, "period": enrollment.period.name, "points": total, "level": level, "movements": [{"id": str(movement.pk), "points": movement.points, "reason": movement.reason, "category": movement.category.name, "regulationVersion": movement.regulation.version, "date": movement.created_at.isoformat(), "activity": str(movement.activity_id) if movement.activity_id else None} for movement in movements.select_related("category", "regulation")]}
+            if group_view:
+                row.update({"student": enrollment.student.user.get_full_name() or enrollment.student.user.username, "studentNumber": enrollment.student.student_number})
+            totals.append(row)
+    return Response({"regulations": regulations, "totals": totals, "groupView": group_view, "levelThresholds": [{"name": "Explorador", "from": 0, "to": 99}, {"name": "Participante", "from": 100, "to": 249}, {"name": "Desarrollador", "from": 250, "to": 499}, {"name": "Líder", "from": 500, "to": 749}, {"name": "Talento destacado", "from": 750, "to": None}]})
 
 
 @api_view(["POST"])

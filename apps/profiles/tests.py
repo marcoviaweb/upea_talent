@@ -1,8 +1,9 @@
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.core.exceptions import PermissionDenied
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -83,6 +84,10 @@ class TrajectoryWorkflowTests(TestCase):
         home = client.get(reverse("profiles:api-home"))
         self.assertEqual(home.status_code, 200)
         self.assertEqual(home.data["user"]["username"], self.student.username)
+        self.assertEqual(len(home.data["progress"]), 1)
+        self.assertEqual(home.data["progress"][0]["label"], self.period.code)
+        self.assertEqual(home.data["progress"][0]["average"], None)
+        self.assertTrue({"evidenceInReview", "evidenceObserved", "evidenceRejected", "evidenceRevoked"}.issubset(home.data["progress"][0]))
         self.assertTrue(AuditEvent.objects.filter(action="auth.login_succeeded", actor=self.student).exists())
 
     def test_failed_login_is_recorded_without_persisting_a_password(self):
@@ -132,6 +137,18 @@ class TrajectoryWorkflowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="root"')
         self.assertContains(response, 'id="root"')
+
+    def test_portal_root_redirects_directly_to_login(self):
+        response = self.client.get(reverse("profiles:portal-root"))
+        self.assertRedirects(response, reverse("profiles:login"), fetch_redirect_response=False)
+
+    @override_settings(FRONTEND_DEV_SERVER=True)
+    @patch("apps.profiles.views.socket.create_connection", side_effect=ConnectionRefusedError)
+    def test_portal_uses_built_frontend_when_vite_is_not_running(self, _create_connection):
+        response = self.client.get(reverse("profiles:login"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "/static/profiles/frontend/assets/main.js")
+        self.assertNotContains(response, "127.0.0.1:5173")
 
     def test_student_cannot_open_another_students_profile_by_uuid(self):
         client, _ = self.api_session(self.student)

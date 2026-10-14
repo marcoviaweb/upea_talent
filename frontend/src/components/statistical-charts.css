@@ -1,0 +1,19 @@
+.stat-chart-card{min-width:0;display:grid;grid-template-rows:auto 260px auto;gap:10px;border:1px solid #e2eaf0;border-radius:14px;padding:16px;background:linear-gradient(160deg,#fff,#fbfdfe);box-shadow:0 4px 18px #17384c08}
+.stat-chart-card>header h3{margin:0;color:#1e4156;font-size:14px;letter-spacing:-.015em}
+.stat-chart-card>header p{margin:5px 0 0;color:#718391;font-size:11px;line-height:1.5}
+.stat-chart-plot{min-width:0;min-height:0;outline:none}
+.stat-chart-empty{height:100%;display:grid;place-items:center;border-radius:10px;background:#f7fafb;color:#718391;font-size:12px;text-align:center}
+.stat-chart-data summary{width:max-content;min-height:28px;display:flex;align-items:center;color:#286679;font-size:10px;font-weight:700;cursor:pointer}
+.stat-chart-data summary:focus-visible{outline:3px solid #8fc6cb;outline-offset:2px;border-radius:4px}
+.stat-chart-table-wrap{max-width:100%;overflow:auto;margin-top:7px;border:1px solid #e1e9ed;border-radius:9px}
+.stat-chart-table-wrap table{width:100%;border-collapse:collapse;color:#445f70;font-size:10px;text-align:left}
+.stat-chart-table-wrap caption{padding:8px 10px;background:#f5f9fa;font-weight:700;text-align:left}
+.stat-chart-table-wrap th,.stat-chart-table-wrap td{padding:7px 10px;border-bottom:1px solid #eaf0f2}
+.stat-chart-table-wrap th{color:#607788;background:#f9fbfc;font-size:9px}
+.stat-chart-table-wrap tr:last-child td{border-bottom:0}
+.stat-chart-table-wrap td:last-child,.stat-chart-table-wrap th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.student-stat-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:6px 0 16px}
+.student-progress-grid{margin-top:4px}
+@media(max-width:760px){.stat-chart-card{grid-template-rows:auto 245px auto;padding:13px}.student-stat-charts{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.stat-chart-card *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media print{.stat-chart-card{break-inside:avoid;box-shadow:none;background:#fff}.stat-chart-card{grid-template-rows:auto 220px auto}.stat-chart-data{display:none}}

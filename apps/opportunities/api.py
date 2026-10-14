@@ -12,6 +12,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.accounts.models import RoleAssignment
 from apps.academics.models import AcademicPeriod, Career, Course, Enrollment
+from apps.accounts.permissions import visible_course_enrollments
 from apps.audit.services import record_event
 from .models import Application, EligibilitySnapshot, Opportunity, OpportunityRequirement, OpportunityVersion
 from .services import can_manage_version, decide_application, evaluate_eligibility, has_career_role
@@ -196,7 +197,10 @@ def api_opportunities(request):
     user = request.user
     enrollments = Enrollment.objects.filter(student__user=user, status=Enrollment.Status.ACTIVE).select_related("career", "period")
     enrollment_ids = list(enrollments.values_list("id", flat=True))
-    career_ids = list(enrollments.values_list("career_id", flat=True))
+    career_ids = set(enrollments.values_list("career_id", flat=True))
+    # Teaching staff can discover calls offered to the careers of their active groups.
+    # This grants read-only visibility; application and eligibility still require a student enrollment.
+    career_ids.update(visible_course_enrollments(user).values_list("offering__course__career_id", flat=True))
     versions = OpportunityVersion.objects.filter(
         opportunity__status__in=(Opportunity.Status.PUBLISHED, Opportunity.Status.CLOSED),
         opportunity__active_version_id=F("pk"),

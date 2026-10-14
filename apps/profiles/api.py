@@ -180,11 +180,16 @@ def api_home(request):
             output_field=DecimalField(max_digits=8, decimal_places=2),
         )).aggregate(v=Avg("normalized"))["v"]
         period_points = PointsMovement.objects.filter(enrollment__in=period_enrollments).aggregate(v=Sum("points"))["v"] or 0
+        period_activities = Activity.objects.filter(enrollment__in=period_enrollments)
         progress_periods.append({"label": period.code, "detail": period.name,
                                  "average": round(float(average), 1) if average is not None else None,
                                  "points": period_points,
-                                 "evidence": Activity.objects.filter(enrollment__in=period_enrollments).count(),
-                                 "validated": Activity.objects.filter(enrollment__in=period_enrollments, status=Activity.Status.APPROVED).count()})
+                                 "evidence": period_activities.count(),
+                                 "validated": period_activities.filter(status=Activity.Status.APPROVED).count(),
+                                 "evidenceInReview": period_activities.filter(status=Activity.Status.IN_REVIEW).count(),
+                                 "evidenceObserved": period_activities.filter(status=Activity.Status.OBSERVED).count(),
+                                 "evidenceRejected": period_activities.filter(status=Activity.Status.REJECTED).count(),
+                                 "evidenceRevoked": period_activities.filter(status=Activity.Status.REVOKED).count()})
     return Response({"user": _user_payload(request.user),
                      "enrollments": [_enrollment_payload(enrollment) for enrollment in enrollments],
                      "groups": groups,

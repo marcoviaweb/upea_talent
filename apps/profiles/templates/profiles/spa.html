@@ -6,6 +6,10 @@
     <meta name="theme-color" content="#071a35" />
     <meta name="description" content="Portal de trayectoria académica UPEA Talent+." />
     <title>UPEA Talent+ · Trayectoria</title>
+    <style>
+      .skip-link { position: fixed; z-index: 1000; top: 12px; left: 12px; transform: translateY(-180%); padding: 11px 15px; color: white; background: #071a35; border-radius: 9px; }
+      .skip-link:focus { transform: translateY(0); }
+    </style>
     {% if frontend_dev_server %}
       <script type="module" src="http://127.0.0.1:5173/@vite/client"></script>
       <script type="module" src="http://127.0.0.1:5173/src/main.tsx"></script>

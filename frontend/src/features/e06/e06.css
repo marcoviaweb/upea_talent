@@ -64,6 +64,9 @@
 .e06-level-item { display: grid; justify-items: center; gap: 8px; min-width: 0; padding: 12px 6px; border: 1px solid #e7ecf0; border-radius: 12px; background: #fbfcfd; text-align: center; }
 .e06-level-item > strong { color: #52647b; font-size: 11px; font-variant-numeric: tabular-nums; }
 .e06-balance-top > .e06-insignia { margin-left: auto; }
+.e06-student-ledger { display: grid; gap: 3px; margin-top: 14px; padding: 10px 12px; border: 1px solid #e2eaf0; border-radius: 10px; background: #f7fafc; }
+.e06-student-ledger strong { color: #173a57; font-size: 13px; }
+.e06-student-ledger span { color: #68768b; font-size: 10px; }
 @media (max-width: 767px) {
   .e06-levels-heading { align-items: flex-start; flex-direction: column; }
   .e06-insignia-showcase .e06-levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

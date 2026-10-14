@@ -3,6 +3,7 @@ import { Activity, ArrowDownToLine, Bell, BellRing, ClipboardList, FileBarChart2
 import { useNavigate } from "react-router-dom";
 import { api, errorMessage } from "../../api";
 import { auditActionFilterValue, auditActionLabel, auditObjectTypeLabel, auditResultLabel, auditRoleScopeLabel, auditScopeLabel } from "../../localization";
+import { StatisticalBarChart, StatisticalLineChart, StatisticalPieChart } from "../../components/StatisticalCharts";
 import "./e11.css";
 
 type Career = { id: string; name: string; code: string; institutionId?: string };
@@ -12,7 +13,7 @@ type Notice = { id: string; kind: string; title: string; message: string; target
 type AuditEvent = { id: string; actor: string; roleScope: string; action: string; objectType: string; objectId: string; scope: string; result: string; reason: string; occurredAt: string };
 type ChartPoint = { label: string; detail?: string; value: number };
 type CareerCharts = { career: string; careerCode: string; activityByPeriod: ChartPoint[]; pointsDistribution: ChartPoint[]; evidenceStatuses: ChartPoint[]; opportunityStatuses: ChartPoint[]; applicationsByPeriod: ChartPoint[] };
-type Report = { canManage: boolean; personalView?: boolean; careers: Career[]; periods: Period[]; rows: ReportRow[]; charts?: CareerCharts[]; selectedPeriod: string; source?: string; extractedAt?: string; message?: string };
+type Report = { canManage: boolean; groupView?: boolean; personalView?: boolean; careers: Career[]; periods: Period[]; rows: ReportRow[]; charts?: CareerCharts[]; selectedPeriod: string; source?: string; extractedAt?: string; message?: string };
 type AdminData = { careers: Career[]; gradeCareerIds:string[]; studentCareerIds:string[]; periods: Array<{id:string;careerId:string;careerCode:string;code:string;name:string;startsOn:string;endsOn:string;status:string}>; courses:Array<{id:string;careerId:string;careerCode:string;code:string;name:string;credits:number}>; offerings:Array<{id:string;courseId:string;periodId:string;label:string;status:string}>; students:Array<{id:string;institutionId:string;institution:string;studentNumber:string;name:string}>; enrollments:Array<{id:string;careerId:string;periodId:string;studentId:string;studentNumber:string;student:string;semester:number;status:string}> };
 
 const dateLabel = (value: string) => new Intl.DateTimeFormat("es-BO", { dateStyle: "medium", timeStyle: "short", timeZone: "America/La_Paz" }).format(new Date(value));
@@ -45,7 +46,7 @@ export default function E11Page() {
     if (period) query.set("period", period);
     const result = await api<Report>(`/api/v1/reports/${query.size ? `?${query}` : ""}`);
     setReport(result);
-    if (!result.canManage && !result.personalView) setTab("notifications");
+    if (!result.canManage && !result.personalView && !result.groupView) setTab("notifications");
   }
   async function loadNotifications() {
     const result = await api<{ unreadCount: number; items: Notice[] }>("/api/v1/notifications/");
@@ -100,8 +101,8 @@ export default function E11Page() {
 
     {tab === "report" && <>
       {report?.canManage && <section className="e11-panel e11-filters"><div><span className="eyebrow">ÁMBITO AUTORIZADO</span><h2>Indicadores de carrera</h2><p>Selecciona el alcance que necesitas revisar. El denominador y la definición se muestran junto a cada resultado.</p></div><div className="e11-filter-controls"><label>Carrera<select value={careerId} onChange={(e) => { setCareerId(e.target.value); setPeriodId(""); }}><option value="">Todas mis carreras</option>{report.careers.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></label><label>Periodo<select value={periodId} onChange={(e) => setPeriodId(e.target.value)}><option value="">Todos los periodos</option>{periods.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></label><a className="button button-primary e11-export" href={exportPath}><ArrowDownToLine size={16}/> Exportar CSV</a><button className="button button-secondary" onClick={() => window.print()}>Imprimir informe</button></div></section>}
-      {(report?.canManage || report?.personalView) ? <section className="e11-panel"><div className="e11-section-heading"><div><span className="eyebrow">{report.personalView ? "RESUMEN PERSONAL" : "RESUMEN CUANTITATIVO"}</span><h2>{report.personalView ? "Mi trayectoria en cifras" : "Estado de la trayectoria"}</h2></div><span className="e11-update">Actualizado {report.extractedAt ? dateLabel(report.extractedAt) : "ahora"}</span></div>
-        {report.canManage && <div className="e11-chart-grid">{(report.charts ?? []).map((career) => <div className="e11-career-charts" key={career.careerCode}><h3>{career.careerCode} · {career.career}</h3><div className="e11-visuals"><TrendChart title="Actividad por periodo" points={career.activityByPeriod}/><BarChart title="Distribución de puntos por nivel" points={career.pointsDistribution}/><BarChart title="Estado de evidencias" points={career.evidenceStatuses}/><BarChart title="Estado de oportunidades" points={career.opportunityStatuses}/><TrendChart title="Evolución de postulaciones" points={career.applicationsByPeriod}/></div></div>)}</div>}
+      {(report?.canManage || report?.personalView || report?.groupView) ? <section className="e11-panel"><div className="e11-section-heading"><div><span className="eyebrow">{report.personalView ? "RESUMEN PERSONAL" : report.groupView ? "RESUMEN DOCENTE" : "RESUMEN CUANTITATIVO"}</span><h2>{report.personalView ? "Mi trayectoria en cifras" : report.groupView ? "Indicadores de mis grupos" : "Estado de la trayectoria"}</h2></div><span className="e11-update">Actualizado {report.extractedAt ? dateLabel(report.extractedAt) : "ahora"}</span></div>
+        {(report.canManage || report.groupView) && <div className="e11-chart-grid">{(report.charts ?? []).map((career) => <div className="e11-career-charts" key={career.careerCode}><h3>{career.careerCode} · {career.career}</h3><div className="e11-visuals"><StatisticalBarChart title="Actividad por periodo" description="Cantidad de evidencias registradas en cada periodo académico." data={career.activityByPeriod}/><StatisticalPieChart title="Distribución de puntos por nivel" description="Cantidad de matrículas en cada nivel de trayectoria." data={career.pointsDistribution}/><StatisticalPieChart title="Estado de evidencias" description="Proporción de evidencias según su estado actual." data={career.evidenceStatuses}/><StatisticalPieChart title={report.groupView ? "Estado de postulaciones" : "Estado de oportunidades"} description={report.groupView ? "Postulaciones asociadas a estudiantes de tus grupos." : "Proporción de oportunidades según su estado."} data={career.opportunityStatuses}/><StatisticalLineChart title="Evolución de postulaciones" description="Cantidad de postulaciones presentadas en cada periodo." data={career.applicationsByPeriod}/></div></div>)}</div>}
         <div className="e11-metric-grid" aria-label="Resumen visual de indicadores">{report.rows.map((row, index) => <article className="e11-metric-card" key={`${row.careerCode}-${row.metric}-${index}`}><span>{report.canManage && report.careers.length > 1 ? `${row.careerCode} · ` : ""}{row.metric}</span><strong>{row.value}</strong><small>Denominador: {row.denominator}</small></article>)}</div>
         <p className="e11-source">Fuente: {report.source} Las tarjetas describen indicadores con sus propias unidades; no sugieren relaciones causales ni dan acceso a expedientes privados.</p>
         <div className="e11-table-wrap"><table><caption>Tabla accesible equivalente al resumen visual</caption><thead><tr><th>{report.personalView ? "Alcance" : "Carrera"}</th><th>Indicador</th><th>Valor</th><th>Denominador</th><th>Definición</th></tr></thead><tbody>{report.rows.map((row, index) => <tr key={`${row.careerCode}-${row.metric}-${index}`}><td>{report.personalView ? "Mi trayectoria" : `${row.careerCode} · ${row.career}`}</td><td>{row.metric}</td><td>{row.value}</td><td>{row.denominator}</td><td>{row.definition}</td></tr>)}</tbody></table></div>
@@ -124,13 +125,3 @@ export default function E11Page() {
   </div>;
 }
 
-function BarChart({title,points}:{title:string;points:ChartPoint[]}) {
-  const max=Math.max(1,...points.map((item)=>item.value));
-  return <section className="e11-chart" aria-label={title}><h4>{title}</h4>{points.length?points.map((item)=><div className="e11-chart-row" key={item.label} aria-label={`${item.label}: ${item.value}`}><span title={item.detail}>{item.label}</span><div role="img" aria-label={`${Math.round(item.value/max*100)} por ciento`}><i style={{width:`${Math.max(item.value?3:0,item.value/max*100)}%`}}/></div><strong>{item.value}</strong></div>):<p>Sin datos en este alcance.</p>}<p className="e11-chart-description">Las barras representan registros del alcance y periodo seleccionados.</p></section>
-}
-
-function TrendChart({title,points}:{title:string;points:ChartPoint[]}) {
-  const max=Math.max(1,...points.map((item)=>item.value));
-  const plotted=points.map((item,index)=>({item,x:18+(index/Math.max(1,points.length-1))*284,y:98-(item.value/max)*75}));
-  return <section className="e11-chart" aria-label={title}><h4>{title}</h4>{points.length?<><svg className="e11-trend-svg" viewBox="0 0 320 118" role="img" aria-label={`${title}, tendencia por periodo`}><line x1="18" y1="98" x2="302" y2="98"/><line x1="18" y1="23" x2="18" y2="98"/><polyline points={plotted.map(({x,y})=>`${x},${y}`).join(" ")}/>{plotted.map(({item,x,y})=><circle key={`${item.label}-${item.value}`} cx={x} cy={y} r="4"><title>{`${item.detail??item.label}: ${item.value}`}</title></circle>)}</svg><div className="e11-trend-labels">{points.map((item)=><span key={item.label}><strong>{item.label}</strong><small>{item.value} · {item.detail??"registros"}</small></span>)}</div></>:<p>Sin datos en este alcance.</p>}<p className="e11-chart-description">La línea muestra la evolución de registros entre periodos académicos.</p></section>
-}

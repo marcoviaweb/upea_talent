@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, BookOpenCheck, BriefcaseBusiness, CalendarDays,
@@ -11,7 +11,8 @@ import E06Page from "./features/e06/E06Page";
 import E07Page from "./features/e07/E07Page";
 import E09Page from "./features/e09/E09Page";
 import E10Page from "./features/e10/E10Page";
-import E11Page from "./features/e11/E11Page";
+const E11Page = lazy(() => import("./features/e11/E11Page"));
+const StudentProgressCharts = lazy(() => import("./components/StatisticalCharts").then((module) => ({ default: module.StudentProgressCharts })));
 
 function Spinner({ label = "Cargando tu espacio" }: { label?: string }) {
   return <div className="loading-state" role="status"><LoaderCircle size={20} className="spin" /><span>{label}</span></div>;
@@ -36,7 +37,8 @@ function App() {
   }).finally(() => setLoading(false));
 
   useEffect(() => {
-    if (window.location.pathname !== "/acceso/") void reload();
+    if (window.location.pathname === "/") navigate("/acceso/", { replace: true });
+    else if (window.location.pathname !== "/acceso/") void reload();
     else setLoading(false);
   }, []);
 
@@ -45,6 +47,7 @@ function App() {
   }
 
   return <Routes>
+    <Route path="/" element={<Navigate to="/acceso/" replace />} />
     <Route path="/acceso/" element={<LoginPage onLogin={(data) => { setHome(data); navigate("/trayectoria/"); }} />} />
     <Route element={<AppShell home={home} loading={loading} error={error} reload={reload} onLogout={logout} />}>
       <Route path="/trayectoria/" element={<Dashboard />} />
@@ -54,7 +57,7 @@ function App() {
       <Route path="/trayectoria/oportunidades/" element={<E07Page />} />
       <Route path="/trayectoria/evaluaciones/" element={<E09Page />} />
       <Route path="/trayectoria/acompanamiento/" element={<E10Page />} />
-      <Route path="/trayectoria/gestion/" element={<E11Page />} />
+      <Route path="/trayectoria/gestion/" element={<Suspense fallback={<Spinner label="Preparando gráficos e informes" />}><E11Page /></Suspense>} />
       <Route path="/trayectoria/matricula/:enrollmentId/" element={<ProfilePage />} />
       <Route path="/trayectoria/grupo/:offeringId/" element={<RosterPage />} />
       <Route path="/trayectoria/matricula/:enrollmentId/nuevo/:recordType/" element={<DevelopmentFormPage />} />
@@ -147,15 +150,16 @@ function Dashboard() {
   if (!home) return <ErrorPanel error="No se pudieron recuperar los datos de tu espacio." retry={outlet.reload} />;
   const greeting = new Intl.DateTimeFormat("es-BO", { weekday: "long", day: "numeric", month: "long", timeZone: "America/La_Paz" }).format(new Date());
   const filtered = home.enrollments.filter((e) => `${e.career.name} ${e.period.name}`.toLowerCase().includes(filter.toLowerCase()));
+  const teacherHome = home.enrollments.length === 0 && home.groups.length > 0;
   return <div className="page-stack">
     <section className="welcome-hero">
-      <div className="welcome-copy"><span className="eyebrow hero-eyebrow"><CalendarDays size={14} /> {greeting}</span><h1>Hola, {home.user.name.split(" ")[0]}<span className="wave">.</span></h1><p>Este es el recorrido que estás construyendo. Explora tu avance y sigue sumando experiencias.</p><div className="hero-note"><span className="hero-note-icon"><Sparkles size={15} /></span><span><strong>Todo lo que aprendes cuenta.</strong> Actualiza tu trayectoria a medida que avanzas.</span></div></div>
+      <div className="welcome-copy"><span className="eyebrow hero-eyebrow"><CalendarDays size={14} /> {greeting}</span><h1>Hola, {home.user.name.split(" ")[0]}<span className="wave">.</span></h1><p>{teacherHome ? "Aquí tienes los grupos académicos y las tareas de revisión a tu cargo." : "Este es el recorrido que estás construyendo. Explora tu avance y sigue sumando experiencias."}</p><div className="hero-note"><span className="hero-note-icon"><Sparkles size={15} /></span><span><strong>{teacherHome ? "Tu espacio docente está listo." : "Todo lo que aprendes cuenta."}</strong> {teacherHome ? "Consulta las trayectorias de tus grupos y revisa las actividades asignadas." : "Actualiza tu trayectoria a medida que avanzas."}</span></div></div>
       <div className="hero-art" aria-hidden="true"><div className="hero-art-ring ring-a" /><div className="hero-art-ring ring-b" /><div className="hero-art-ring ring-c" /><div className="hero-art-core"><GraduationCap size={42} strokeWidth={1.4} /></div><span className="art-star star-a">✳</span><span className="art-star star-b">✦</span><span className="art-orbit-label label-a">APRENDE</span><span className="art-orbit-label label-b">CREA</span><span className="art-orbit-label label-c">CRECE</span></div>
     </section>
-    <div className="section-title-row"><div><span className="eyebrow">TU HISTORIAL ACADÉMICO</span><h2>Mis matrículas</h2><p>Selecciona un periodo para explorar tu trayectoria.</p></div><span className="record-count"><span>{home.enrollments.length.toString().padStart(2, "0")}</span> periodos</span></div>
+    {home.enrollments.length > 0 && <><div className="section-title-row"><div><span className="eyebrow">TU HISTORIAL ACADÉMICO</span><h2>Mis matrículas</h2><p>Selecciona un periodo para explorar tu trayectoria.</p></div><span className="record-count"><span>{home.enrollments.length.toString().padStart(2, "0")}</span> periodos</span></div>
     {home.enrollments.length > 3 && <div className="search-row"><Search size={17} /><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Buscar carrera o periodo" aria-label="Buscar carrera o periodo" /></div>}
-    {filtered.length ? <div className="enrollment-grid">{filtered.map((enrollment, index) => <EnrollmentCard key={enrollment.id} enrollment={enrollment} index={index} />)}</div> : <EmptyState icon={<BookOpenCheck />} title="No encontramos matrículas" body="Ajusta la búsqueda o consulta con tu coordinación." />}
-    {(home.progress?.length ?? 0) > 0 && <section className="student-progress"><div className="section-title-row compact-title"><div><span className="eyebrow">AVANCE PERSONAL</span><h2>Mi progreso por periodo</h2><p>Promedio verificado, puntos SPD y evidencias registradas en tus matrículas.</p></div></div><div className="student-progress-grid">{home.progress!.map((item)=><article className="student-progress-card" key={item.label}><div><strong>{item.label}</strong><span>{item.detail}</span></div><div className="student-progress-stats"><span><b>{item.average ?? "—"}</b>Promedio / 100</span><span><b>{item.points}</b>Puntos SPD</span><span><b>{item.validated}/{item.evidence}</b>Evidencias validadas</span></div>{item.average !== null && <div className="student-progress-track" role="img" aria-label={`Promedio verificado ${item.average} de 100`}><i style={{width:`${Math.min(100,Math.max(0,item.average))}%`}}/></div>}</article>)}</div></section>}
+    {filtered.length ? <div className="enrollment-grid">{filtered.map((enrollment, index) => <EnrollmentCard key={enrollment.id} enrollment={enrollment} index={index} />)}</div> : <EmptyState icon={<BookOpenCheck />} title="No encontramos matrículas" body="Ajusta la búsqueda o consulta con tu coordinación." />}</>}
+    {home.enrollments.length > 0 && (home.progress?.length ?? 0) > 0 && <section className="student-progress"><div className="section-title-row compact-title"><div><span className="eyebrow">AVANCE PERSONAL</span><h2>Mi progreso por periodo</h2><p>Promedio verificado, puntos SPD y evidencias registradas en tus matrículas.</p></div></div><Suspense fallback={<div className="loading-state" role="status">Preparando tus gráficos…</div>}><StudentProgressCharts periods={home.progress!}/></Suspense><div className="student-progress-grid">{home.progress!.map((item)=><article className="student-progress-card" key={`${item.label}-${item.detail}`}><div><strong>{item.label}</strong><span>{item.detail}</span></div><div className="student-progress-stats"><span><b>{item.average ?? "—"}</b>Promedio / 100</span><span><b>{item.points}</b>Puntos SPD</span><span><b>{item.validated}/{item.evidence}</b>Evidencias validadas</span></div>{item.average !== null && <div className="student-progress-track" role="img" aria-label={`Promedio verificado ${item.average} de 100`}><i style={{width:`${Math.min(100,Math.max(0,item.average))}%`}}/></div>}</article>)}</div></section>}
     {home.groups.length > 0 && <section className="teacher-section"><div className="section-title-row compact-title"><div><span className="eyebrow">ESPACIO DOCENTE</span><h2>Grupos asignados</h2><p>Accede a las trayectorias de los estudiantes de tus grupos.</p></div><span className="record-count"><span>{home.groups.length.toString().padStart(2, "0")}</span> grupos</span></div><div className="group-card-grid">{home.groups.map((group) => <Link key={group.id} className="group-card" to={`/trayectoria/grupo/${group.id}/`}><span className="group-icon"><UsersRound size={19} /></span><span className="group-info"><strong>{group.course.name}</strong><small>{group.course.code} · {group.period} · Grupo {group.group}</small></span><span className="group-students">{group.studentCount}<small>estudiantes</small></span><ArrowRight className="group-arrow" size={17} /></Link>)}</div></section>}
   </div>;
 }
